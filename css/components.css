@@ -1,0 +1,161 @@
+/* ── Cards ───────────────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+  margin-bottom: .85rem;
+}
+.card-title {
+  font-size: .75rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--red-700);
+  margin-bottom: .85rem; display: flex; align-items: center; gap: .4rem;
+}
+.card-title svg { width: 16px; height: 16px; }
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: .4rem; border-radius: var(--radius-sm);
+  font-weight: 700; font-size: .9rem; padding: .8rem 1.2rem;
+  transition: filter .15s, transform .1s; letter-spacing: .01em;
+  touch-action: manipulation;
+}
+.btn:active { transform: scale(.97); filter: brightness(.9); }
+.btn-primary {
+  background: var(--red-600); color: var(--white);
+  width: 100%; padding: .95rem;
+}
+.btn-secondary {
+  background: var(--gray-100); color: var(--gray-800);
+  width: 100%;
+}
+.btn-success {
+  background: var(--green); color: var(--white); width: 100%; padding: .95rem;
+}
+.btn-ghost {
+  background: transparent; color: var(--red-600);
+  border: 2px solid var(--red-600);
+}
+.btn-sm { font-size: .78rem; padding: .45rem .75rem; border-radius: 6px; }
+.btn svg { width: 18px; height: 18px; }
+
+/* ── Search Bar ──────────────────────────────────────────────── */
+.search-wrap { position: relative; margin-bottom: .85rem; }
+.search-wrap svg {
+  position: absolute; left: .75rem; top: 50%; transform: translateY(-50%);
+  width: 18px; height: 18px; color: var(--gray-400);
+}
+.search-wrap input { padding-left: 2.5rem; }
+.badge {
+  display: inline-block; padding: .2rem .55rem;
+  border-radius: 20px; font-size: .68rem; font-weight: 700;
+  letter-spacing: .04em;
+}
+.badge-done     { background: var(--green-lt); color: var(--green); }
+
+/* ── Empty / Loading States ──────────────────────────────────── */
+.empty-state {
+  text-align: center; padding: 2.5rem 1rem;
+  color: var(--gray-400);
+}
+.empty-state svg { width: 48px; height: 48px; margin: 0 auto .75rem; display: block; opacity: .4; }
+.empty-state p { font-size: .88rem; }
+.spinner {
+  width: 32px; height: 32px; border: 3px solid var(--gray-200);
+  border-top-color: var(--red-600); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 2rem auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Toast ───────────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--gray-800); color: var(--white);
+  padding: .65rem 1.2rem; border-radius: 20px; font-size: .82rem;
+  font-weight: 600; white-space: nowrap; z-index: 9999;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  max-width: 90vw; white-space: pre-wrap; text-align: center;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ── Modal ───────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 500; display: none; align-items: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: var(--white); border-radius: var(--radius) var(--radius) 0 0;
+  padding: 1.25rem 1rem 2rem; width: 100%;
+  box-shadow: var(--shadow-lg);
+  max-height: 90dvh; overflow-y: auto;
+}
+.modal-handle {
+  width: 40px; height: 4px; background: var(--gray-200);
+  border-radius: 2px; margin: 0 auto .9rem;
+}
+.modal-title { font-size: 1.05rem; font-weight: 800; margin-bottom: 1rem; color: var(--gray-800); }
+/* ── Confirm Modal ───────────────────────────────────────────── */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 1000; display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+}
+.confirm-box {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); padding: 1.5rem 1.25rem;
+  width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.confirm-icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--red-100); color: var(--red-700);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin: 0 auto .25rem;
+}
+.confirm-title {
+  font-size: 1rem; font-weight: 800; color: var(--gray-800);
+  text-align: center;
+}
+.confirm-msg {
+  font-size: .83rem; color: var(--gray-600);
+  text-align: center; line-height: 1.5;
+}
+.confirm-actions {
+  display: flex; gap: .6rem; margin-top: .25rem;
+}
+.confirm-actions .btn { flex: 1; padding: .8rem; }
+/* ── Edit order modal ────────────────────────────────────────── */
+.edit-line-row {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem 0; border-bottom: 1px solid var(--gray-100);
+}
+.edit-line-row:last-child { border-bottom: none; }
+.edit-line-name { flex: 1; font-size: .83rem; font-weight: 600; min-width: 0; }
+.edit-line-price { font-size: .75rem; color: var(--gray-400); }
+.edit-line-qty {
+  width: 58px; text-align: center; font-weight: 700;
+  padding: .3rem .3rem; font-size: .9rem;
+}
+.edit-line-del {
+  background: var(--red-100); color: var(--red-700);
+  border-radius: 6px; padding: .25rem .45rem; font-size: .8rem;
+}
+.edit-add-product-row {
+  display: flex; gap: .4rem; margin-top: .75rem; align-items: flex-end;
+}
+.edit-add-product-row select { flex: 1; font-size: .8rem; }
+.edit-add-product-row input  { width: 68px; text-align: center; font-size: .9rem; }
+
+.form-grid { display: grid; gap: .75rem; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.form-grid { display: grid; gap: .75rem; }
+.form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+
+/* ── Section divider ─────────────────────────────────────────── */
+.section-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gray-400);
+  margin: 1rem 0 .5rem; padding: 0 .1rem;
+}

@@ -151,18 +151,20 @@ async function doLogin() {
     return "Error de acceso (" + (e.code || e.message) + ")";
   };
 
+  const authInstance = window._auth || (window.firebase && typeof firebase.auth === "function" ? firebase.auth() : null);
+
   // ── ADMINISTRADOR: Firebase Authentication ─────────────────
   if (role === "admin") {
     const email = "admin@chibli.com";
     try {
-      if (window._auth) {
-        await window._auth.signInWithEmailAndPassword(email, pass);
+      if (authInstance) {
+        await authInstance.signInWithEmailAndPassword(email, pass);
       } else if (pass !== ADMIN_PIN) {            // sin Auth (modo demo)
         errEl.classList.add("show"); return;
       }
     } catch (e) {
-      if (e.code === "auth/network-request-failed" && pass === ADMIN_PIN) {
-        // respaldo sin internet
+      if (pass === ADMIN_PIN) {
+        // respaldo con PIN si falla red o dominio en GitHub Pages
       } else {
         errEl.textContent = authMsg(e, email);
         errEl.classList.add("show"); return;
@@ -236,10 +238,10 @@ async function doLogin() {
 
   let autenticado = false;
   let ultimoError = null;
-  if (window._auth) {
+  if (authInstance) {
     for (const email of [...new Set(candidatos)]) {
       try {
-        await window._auth.signInWithEmailAndPassword(email, pass);
+        await authInstance.signInWithEmailAndPassword(email, pass);
         autenticado = true;
         break;
       } catch (e) {

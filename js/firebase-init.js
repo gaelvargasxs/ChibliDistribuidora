@@ -16,11 +16,10 @@
   try {
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    window._auth = firebase.auth();
-    window._auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
     // Adaptar la API compat a la misma interfaz que usaba el código
     window._db = db;
+    window._auth = (firebase.auth ? firebase.auth() : null);
     window._firebaseReady = true;
 
     // Puente de funciones: el resto del código sigue igual sin cambios

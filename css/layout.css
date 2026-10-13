@@ -1,0 +1,117 @@
+/* ── Header — estilo Stitch (blanco/minimalista) ──────────────── */
+#app-header {
+  background: var(--white);
+  color: var(--ink);
+  padding: .7rem .9rem;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+.header-top { display: flex; align-items: center; gap: .65rem; }
+.header-logo {
+  width: 36px; height: 36px; background: var(--ink);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.header-logo svg { width: 20px; height: 20px; }
+.header-titles { display: flex; flex-direction: column; min-width: 0; }
+.header-sub {
+  font-size: .62rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); opacity: 1; margin: 0;
+}
+.header-title {
+  font-size: 1.05rem; font-weight: 800; letter-spacing: -.01em;
+  color: var(--ink); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.header-actions { margin-left: auto; display: flex; align-items: center; gap: .5rem; }
+.header-badge {
+  background: var(--red-700); color: var(--white);
+  font-size: .68rem; font-weight: 800; padding: .3rem .6rem;
+  border-radius: 20px; white-space: nowrap;
+}
+.header-icon-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink); background: var(--line-lt); flex-shrink: 0;
+}
+.header-icon-btn svg { width: 18px; height: 18px; }
+.header-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--red-700); color: var(--white);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  position: relative;
+}
+.header-avatar svg { width: 17px; height: 17px; }
+.header-menu {
+  position: absolute; top: calc(100% + 8px); right: .9rem; z-index: 210;
+  background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); padding: .4rem; min-width: 190px; display: none;
+}
+.header-menu.open { display: block; }
+.header-menu-label {
+  padding: .5rem .6rem .35rem; font-size: .72rem; font-weight: 700; color: var(--ink);
+}
+.header-menu-sub { padding: 0 .6rem .5rem; font-size: .68rem; color: var(--muted); }
+.header-menu-btn {
+  width: 100%; text-align: left; padding: .55rem .6rem; border-radius: 8px;
+  font-size: .8rem; font-weight: 700; color: var(--red-700);
+}
+.header-menu-btn:active { background: var(--red-100); }
+.client-bar {
+  margin-top: .55rem;
+  background: var(--line-lt);
+  border-radius: var(--radius-sm);
+  padding: .45rem .65rem;
+  font-size: .78rem;
+  display: flex; align-items: center; gap: .4rem;
+  color: var(--muted);
+}
+.client-bar strong { font-weight: 700; color: var(--ink); }
+
+/* ── Tab Bar — bottom nav estilo Stitch ───────────────────────── */
+#tab-bar {
+  display: flex;
+  background: var(--white);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -2px 12px rgba(0,0,0,.06);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-x: auto; scrollbar-width: none;
+}
+#tab-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 1 1 0; min-width: 3.6rem;
+  display: flex; flex-direction: column; align-items: center;
+  padding: .55rem .1rem .5rem;
+  color: var(--faint);
+  font-size: .56rem; font-weight: 700; letter-spacing: .02em;
+  gap: .25rem; transition: color .15s;
+}
+.tab-btn svg { width: 19px; height: 19px; }
+.tab-btn.active { color: var(--ink); }
+.hist-nav-badge {
+  position: absolute; top: .25rem; right: 50%; margin-right: -1.05rem;
+  background: var(--red-700); color: var(--white);
+  font-size: .58rem; font-weight: 800; line-height: 1;
+  min-width: 15px; height: 15px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; padding: 0 2px;
+}
+.sidebar-header, .sidebar-footer { display: none; }
+.sidebar-header {
+  padding: 1.1rem 1.1rem .8rem; border-bottom: 1px solid var(--line);
+}
+.sidebar-header-title { font-size: 1.02rem; font-weight: 800; color: var(--ink); }
+.sidebar-header-sub { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+.sidebar-footer { padding: .7rem; border-top: 1px solid var(--line); }
+.sidebar-logout-btn {
+  width: 100%; display: flex; align-items: center; gap: .6rem;
+  padding: .6rem .7rem; border-radius: 8px; color: var(--red-700);
+  font-size: .8rem; font-weight: 700;
+}
+.sidebar-logout-btn:active { background: var(--red-50); }
+.tab-label-desktop { display: none; }
+
+/* ── Views ───────────────────────────────────────────────────── */
+.view { display: none; padding: 1rem; padding-bottom: calc(var(--nav-h) + 2rem + env(safe-area-inset-bottom)); }
+.view.active { display: block; }

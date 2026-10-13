@@ -1,0 +1,53 @@
+@media (min-width: 520px) {
+  #product-grid { grid-template-columns: repeat(3, 1fr); }
+  .view { max-width: 540px; margin: 0 auto; }
+  #tab-bar { max-width: 540px; margin: 0 auto; }
+  #app-header > * { max-width: 540px; margin: 0 auto; }
+}
+/* ── Admin Desktop: layout tipo sidebar (solo admin, pantallas ≥1024px) ── */
+@media (min-width: 1024px) {
+  body.role-admin #app-header { margin-left: 240px; }
+  body.role-admin #tab-bar {
+    top: 0; bottom: 0; left: 0; right: auto;
+    width: 240px; flex-direction: column; align-items: stretch;
+    border-top: none; border-right: 1px solid var(--line);
+    box-shadow: 2px 0 12px rgba(0,0,0,.04);
+    padding-bottom: 0; overflow-y: auto;
+  }
+  body.role-admin .sidebar-header { display: block; }
+  body.role-admin .sidebar-footer { display: block; margin-top: auto; }
+  body.role-admin #tab-bar .tab-btn {
+    flex-direction: row; justify-content: flex-start; align-items: center;
+    gap: .7rem; padding: .7rem 1.1rem; font-size: .78rem; font-weight: 700;
+    min-width: 0; text-transform: none; letter-spacing: 0;
+  }
+  body.role-admin #tab-bar .tab-btn svg { width: 18px; height: 18px; }
+  body.role-admin #tab-bar .tab-btn.active {
+    background: var(--red-50); color: var(--red-700);
+    box-shadow: inset 3px 0 0 var(--red-700);
+  }
+  body.role-admin .tab-label-mobile  { display: none; }
+  body.role-admin .tab-label-desktop { display: inline; }
+  body.role-admin .view {
+    margin-left: 240px; padding: 1.4rem 1.8rem 2.2rem; max-width: 1480px;
+  }
+  body.role-admin .dash-main-grid { grid-template-columns: 360px 1fr; align-items: start; }
+  body.role-admin .dash-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+    padding: 0 0 .85rem;
+  }
+  /* En desktop el dashboard tiene padding normal como el resto de views */
+  body.role-admin #admin-subview-dashboard { padding: 0; }
+  body.role-admin .dash-header-bar { padding: 0 0 .5rem; }
+  body.role-admin .dash-panel-title { padding: 0; font-size: 1.75rem; }
+  body.role-admin .dash-panel-sub   { padding: .1rem 0 1rem; }
+  body.role-admin .dash-utilidad-card { margin: 0 0 .85rem; }
+  body.role-admin .dash-pedidos-card  { margin: 0 0 .85rem; }
+  body.role-admin .dash-stock-section { padding: 0 0 .85rem; }
+  body.role-admin .dash-ops-section   { padding: 0 0 .85rem; }
+  /* Grid 2 col para las secciones de abajo */
+  body.role-admin .dash-bottom-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start;
+  }
+}
+

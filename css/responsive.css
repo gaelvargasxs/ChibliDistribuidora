@@ -1,6 +1,6 @@
 @media (min-width: 520px) {
   #product-grid { grid-template-columns: repeat(3, 1fr); }
-  .view { max-width: 540px; margin: 0 auto; }
+  .view:not(#view-comercios):not(#view-inventario) { max-width: 540px; margin: 0 auto; }
   #tab-bar { max-width: 540px; margin: 0 auto; }
   #app-header > * { max-width: 540px; margin: 0 auto; }
 }

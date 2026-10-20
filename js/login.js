@@ -156,19 +156,17 @@ async function doLogin() {
   // ── ADMINISTRADOR: Firebase Authentication ─────────────────
   if (role === "admin") {
     const email = "admin@chibli.com";
+    if (!authInstance) {
+      errEl.textContent = "Firebase Authentication no está disponible";
+      errEl.classList.add("show");
+      return;
+    }
     try {
-      if (authInstance) {
-        await authInstance.signInWithEmailAndPassword(email, pass);
-      } else if (pass !== ADMIN_PIN) {            // sin Auth (modo demo)
-        errEl.classList.add("show"); return;
-      }
+      await authInstance.signInWithEmailAndPassword(email, pass);
     } catch (e) {
-      if (pass === ADMIN_PIN) {
-        // respaldo con PIN si falla red o dominio en GitHub Pages
-      } else {
-        errEl.textContent = authMsg(e, email);
-        errEl.classList.add("show"); return;
-      }
+      errEl.textContent = authMsg(e, email);
+      errEl.classList.add("show");
+      return;
     }
     currentSession = { role: "admin" };
     adminUnlocked  = true;
@@ -293,16 +291,15 @@ function applySession() {
     return;
   }
 
-  // Administrador → entra directo al módulo de Inventarios
+  // Administrador → entra al panel central
   document.getElementById("login-screen").classList.add("hidden");
   document.body.classList.add("role-admin");
   document.body.classList.remove("role-vendedor");
   document.getElementById("app-header").style.display = "";
   document.getElementById("tab-bar").style.display = "";
-  document.getElementById("view-admin").classList.add("active");
   document.getElementById("session-label").textContent = "Administrador";
   document.getElementById("header-menu-sub").textContent = "admin@chibli.com";
-  renderStockList();
+  switchMainTab("inventario");
   toast("Bienvenido, Administrador");
 }
 
@@ -315,7 +312,9 @@ function doLogout() {
   document.body.classList.remove("role-admin", "role-vendedor");
   document.getElementById("app-header").style.display = "none";
   document.getElementById("tab-bar").style.display = "none";
-  document.getElementById("view-admin").classList.remove("active");
+  ["view-inventario", "view-comercios", "view-admin"].forEach(id => {
+    document.getElementById(id)?.classList.remove("active");
+  });
   document.getElementById("login-screen").classList.remove("hidden");
   document.getElementById("login-password").value = "";
   setLoginRole("vendedor");

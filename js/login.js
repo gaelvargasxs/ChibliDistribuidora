@@ -2,19 +2,29 @@
 let currentSession = null;
 
 function setLoginRole(role) {
-  document.getElementById("toggle-vendedor").classList.toggle("active", role === "vendedor");
-  document.getElementById("toggle-admin").classList.toggle("active",   role === "admin");
-  document.getElementById("login-vendedor-wrap").style.display = role === "vendedor" ? "" : "none";
+  const isVend = role === "vendedor";
+  document.getElementById("toggle-vendedor").classList.toggle("active", isVend);
+  document.getElementById("toggle-admin").classList.toggle("active",   !isVend);
+
+  // Vendedor usa código y contraseña; Admin usa exclusivamente Google Sign-In
+  document.getElementById("login-vendedor-wrap").style.display = isVend ? "" : "none";
+  document.getElementById("login-password-wrap").style.display = isVend ? "" : "none";
+  const btnLogin = document.querySelector(".btn-login");
+  if (btnLogin) btnLogin.style.display = isVend ? "" : "none";
+
+  const googleWrap = document.getElementById("login-google-wrap");
+  if (googleWrap) googleWrap.style.display = !isVend ? "" : "none";
+
   const titleEl = document.getElementById("login-title");
   const subEl   = document.getElementById("login-sub");
-  if (role === "admin") {
+  if (!isVend) {
     titleEl.textContent = "Acceso Administrador";
-    subEl.innerHTML     = "Ingresa con tu <span>contraseña de administrador</span> del sistema.";
+    subEl.innerHTML     = "Autenticación segura con tu <span>cuenta de Google</span>.";
   } else {
     titleEl.textContent = "Ingreso de Vendedor";
-    subEl.innerHTML     = "Ingresa con tu <span>clave de vendedor</span> o supervisor asignado.";
+    subEl.innerHTML     = "Ingresa con tu <span>código de vendedor</span> y contraseña.";
   }
-  // Store role in hidden field for doLogin
+
   document.getElementById("login-role-value").value = role;
   const errEl = document.getElementById("login-error");
   if (errEl) {
@@ -281,13 +291,23 @@ function applySession() {
   errEl.style.color = "";
   errEl.style.borderColor = "";
 
-  // En esta entrega solo existe el módulo de Inventario (exclusivo de Administrador).
-  // Si entra un Vendedor, se valida su acceso pero solo muestra el toast.
+  // ── ENTREGA 4: PANTALLA DEL VENDEDOR (CATÁLOGO, CARRITO Y PEDIDO) ──
   if (currentSession.role === "vendedor") {
-    const label = currentSession.vendedorNombre || currentSession.vendedorFolio || "Vendedor";
-    toast("Acceso aceptado, " + label, 4000);
-    if (window._auth) window._auth.signOut().catch(() => {});
-    currentSession = null;
+    document.getElementById("login-screen").classList.add("hidden");
+    document.body.classList.add("role-vendedor");
+    document.body.classList.remove("role-admin");
+    document.getElementById("app-header").style.display = "";
+    document.getElementById("session-label").textContent = currentSession.vendedorNombre || "Vendedor";
+    document.getElementById("header-menu-sub").textContent = currentSession.vendedorFolio || "VEN-001";
+
+    const dName = document.getElementById("drawer-user-name");
+    const dFolio = document.getElementById("drawer-user-folio");
+    if (dName) dName.textContent = currentSession.vendedorNombre || "Vendedor";
+    if (dFolio) dFolio.textContent = "Folio: " + (currentSession.vendedorFolio || "VEN-001");
+
+    if (typeof switchTab === "function") switchTab("catalogo");
+    resetInactivityTimer();
+    toast("Bienvenido, " + (currentSession.vendedorNombre || "Vendedor"));
     return;
   }
 
@@ -300,10 +320,12 @@ function applySession() {
   document.getElementById("session-label").textContent = "Administrador";
   document.getElementById("header-menu-sub").textContent = "admin@chibli.com";
   switchMainTab("inventario");
+  resetInactivityTimer();
   toast("Bienvenido, Administrador");
 }
 
 function doLogout() {
+  stopInactivityTimer();
   if (window._auth) window._auth.signOut().catch(() => {});
   currentSession = null;
   adminUnlocked = false;
@@ -319,3 +341,86 @@ function doLogout() {
   document.getElementById("login-password").value = "";
   setLoginRole("vendedor");
 }
+
+
+// ════════════════════════════════════════════════════════════════
+// GOOGLE SIGN-IN (OAUTH 2.0 CON 2FA PARA ADMINISTRADOR)
+// ════════════════════════════════════════════════════════════════
+const ADMIN_WHITELIST = [
+  "nel0407gael@gmail.com",
+  "admin@chibli.com"
+];
+
+async function doGoogleLogin() {
+  const authInstance = window._auth || (window.firebase && typeof firebase.auth === "function" ? firebase.auth() : null);
+  const errEl = document.getElementById("login-error");
+  errEl.classList.remove("show");
+
+  if (!authInstance) {
+    errEl.textContent = "Firebase Authentication no disponible.";
+    errEl.classList.add("show");
+    return;
+  }
+
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await authInstance.signInWithPopup(provider);
+    const user = result.user;
+    const userEmail = (user.email || "").toLowerCase().trim();
+
+    // ── SEGURIDAD ESTRICTA: SOLO CORREO AUTORIZADO DE ADMINISTRADOR ──
+    if (!ADMIN_WHITELIST.includes(userEmail)) {
+      await authInstance.signOut();
+      errEl.textContent = "Acceso denegado: La cuenta " + userEmail + " no está autorizada como Administrador de Distribuidora Chibli.";
+      errEl.classList.add("show");
+      return;
+    }
+
+    currentSession = {
+      role: "admin",
+      adminEmail: user.email,
+      adminName: user.displayName || "Nelson Gael (Admin)"
+    };
+    adminUnlocked = true;
+    applySession();
+  } catch (e) {
+    console.warn("Google Sign-In error:", e);
+    if (e.code === "auth/popup-closed-by-user") return;
+    if (e.code === "auth/operation-not-supported-in-this-environment" || window.location.protocol === "file:") {
+      errEl.textContent = "Google Sign-In requiere servidor web. Abre la página con: http://localhost:8000/evidencias/03_Tiendas_Vendedores/index.html (no con doble clic en el archivo directo).";
+    } else if (e.code === "auth/unauthorized-domain") {
+      errEl.textContent = "Agrega tu dominio a 'Dominios autorizados' en Firebase Console > Authentication.";
+    } else {
+      errEl.textContent = "Error al autenticar con Google (" + (e.message || e.code) + ")";
+    }
+    errEl.classList.add("show");
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// CONTROL DE INACTIVIDAD DE SESIÓN (SESSION TIMEOUT: 10 MINUTOS)
+// Medida de seguridad OWASP para evitar sesiones abiertas desatendidas
+// ════════════════════════════════════════════════════════════════
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos (600,000 ms)
+let inactivityTimer = null;
+
+function resetInactivityTimer() {
+  if (!currentSession) return;
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(() => {
+    if (currentSession) {
+      toast("Tu sesión ha expirado por inactividad (10 minutos) por seguridad.", 5000);
+      doLogout();
+    }
+  }, INACTIVITY_LIMIT_MS);
+}
+
+function stopInactivityTimer() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = null;
+}
+
+// Escuchar interacciones para reiniciar el temporizador de inactividad
+["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"].forEach(evt => {
+  document.addEventListener(evt, resetInactivityTimer, { passive: true });
+});

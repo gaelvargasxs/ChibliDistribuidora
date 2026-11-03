@@ -11,17 +11,19 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="js/firebase-init.js?v=3"></script>
+<script src="js/firebase-init.js?v=12"></script>
 
-<link rel="stylesheet" href="css/variables.css?v=1">
-<link rel="stylesheet" href="css/layout.css?v=1">
-<link rel="stylesheet" href="css/components.css?v=1">
-<link rel="stylesheet" href="css/catalogo.css?v=1">
-<link rel="stylesheet" href="css/login.css?v=1">
-<link rel="stylesheet" href="css/admin.css?v=1">
-<link rel="stylesheet" href="css/responsive.css?v=2">
-<link rel="stylesheet" href="css/inventario.css?v=2">
-<link rel="stylesheet" href="css/tiendas-vendedores.css?v=3">
+<link rel="stylesheet" href="css/variables.css?v=12">
+<link rel="stylesheet" href="css/layout.css?v=12">
+<link rel="stylesheet" href="css/components.css?v=12">
+<link rel="stylesheet" href="css/catalogo.css?v=12">
+<link rel="stylesheet" href="css/cart.css?v=12">
+
+<link rel="stylesheet" href="css/login.css?v=12">
+<link rel="stylesheet" href="css/admin.css?v=12">
+<link rel="stylesheet" href="css/responsive.css?v=12">
+<link rel="stylesheet" href="css/inventario.css?v=12">
+<link rel="stylesheet" href="css/tiendas-vendedores.css?v=12">
 </head>
 <body>
 
@@ -56,8 +58,23 @@
     </div>
 
     <!-- Título dinámico -->
+    <!-- Título dinámico -->
     <div class="login-section-title" id="login-title">Ingreso de Vendedor</div>
     <div class="login-section-sub" id="login-sub">Ingresa con tu <span>clave de vendedor</span> o supervisor asignado.</div>
+
+    <!-- Botón Google Sign-In (exclusivo para Administrador con 2FA) -->
+    <div id="login-google-wrap" style="display:none; margin-bottom: 1rem;">
+      <button type="button" class="btn-google-login" onclick="doGoogleLogin()">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Continuar con Google</span>
+      </button>
+      
+    </div>
 
     <!-- Campo vendedor (buscador) -->
     <div id="login-vendedor-wrap" class="login-field" style="position:relative;">
@@ -102,6 +119,11 @@
 
 <header id="app-header" style="display:none;">
   <div class="header-top">
+        <button class="header-hamburger-btn" onclick="openDrawer()" aria-label="Abrir menú" title="Menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22">
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
     <div class="header-logo">
       <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -131,6 +153,65 @@
   <div class="user-session-bar" id="session-bar" style="display:none;"></div>
 </header>
 
+<!-- ═══════════════════════════════════════════════════════════
+     DRAWER MÓVIL (SOLO PANTALLAS PEQUEÑAS)
+══════════════════════════════════════════════════════════════ -->
+<div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawer()"></div>
+<aside id="app-drawer" class="app-drawer">
+  <div class="drawer-header">
+    <div class="drawer-brand">
+      <div class="drawer-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div>
+        <div class="drawer-title">Distribuidora Chibli</div>
+        <div class="drawer-subtitle">Mayorista B2B</div>
+      </div>
+    </div>
+    <button class="drawer-close-btn" onclick="closeDrawer()" aria-label="Cerrar menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="drawer-user-card" id="drawer-user-card">
+    <div class="drawer-avatar" id="drawer-user-avatar">VEN</div>
+    <div class="drawer-user-info">
+      <div class="drawer-user-name" id="drawer-user-name">Vendedor</div>
+      <div class="drawer-user-folio" id="drawer-user-folio">Folio: VEN-001</div>
+    </div>
+  </div>
+
+  <nav class="drawer-nav">
+    <button class="drawer-nav-item active" data-drawer-tab="catalogo" onclick="switchTab('catalogo'); closeDrawer();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span>Catálogo de Productos</span>
+    </button>
+
+    <button class="drawer-nav-item" data-drawer-tab="pedido" onclick="switchTab('pedido'); closeDrawer();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+      <span>Pedido en Curso</span>
+      <span class="drawer-nav-badge" id="drawer-cart-badge" style="display:none;">0</span>
+    </button>
+
+    <button class="drawer-nav-item" data-drawer-tab="historial" onclick="switchTab('historial'); closeDrawer();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      <span>Historial de Pedidos</span>
+    </button>
+  </nav>
+
+  <div class="drawer-footer">
+    <button class="drawer-logout-btn" onclick="doLogout(); closeDrawer();">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Cerrar Sesión
+    </button>
+  </div>
+</aside>
+
+
 <nav id="tab-bar" style="display:none;">
   <div class="sidebar-header">
     <div class="sidebar-header-title">Panel Central</div>
@@ -143,6 +224,18 @@
   <button class="tab-btn" id="tab-btn-comercios" onclick="switchMainTab('comercios')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
     <span class="tab-label-mobile">TIENDAS &amp; VEND.</span><span class="tab-label-desktop">Tiendas y Vendedores</span>
+  </button>
+    <button class="tab-btn" data-tab="catalogo" id="tab-btn-catalogo" onclick="switchTab('catalogo')" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    <span class="tab-label-mobile">CATÁLOGO</span><span class="tab-label-desktop">Catálogo B2B</span>
+  </button>
+  <button class="tab-btn" data-tab="pedido" id="tab-btn-pedido" onclick="switchTab('pedido')" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+    <span class="tab-label-mobile">PEDIDO</span><span class="tab-label-desktop">Mi Pedido</span>
+  </button>
+  <button class="tab-btn" data-tab="historial" id="tab-btn-historial" onclick="switchTab('historial')" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    <span class="tab-label-mobile">HISTORIAL</span><span class="tab-label-desktop">Historial</span>
   </button>
   <div class="sidebar-footer">
     <button class="sidebar-logout-btn" onclick="doLogout()">
@@ -661,13 +754,159 @@
   </div>
 </section>
 
+<!-- ═══════════════════════════════════════════════════════════
+     VIEW — CATÁLOGO DE PRODUCTOS (VENDEDOR)
+══════════════════════════════════════════════════════════════ -->
+<section class="view" id="view-catalogo">
+  <div class="catalogo-search-bar">
+    <div class="catalogo-search-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="product-search" placeholder="Buscar por nombre, código o categoría…" oninput="filterProducts()" />
+    </div>
+  </div>
+
+  <div class="cat-chips" id="cat-chips"></div>
+
+  <div class="catalogo-count-bar">
+    <span id="catalogo-count-label">Cargando productos…</span>
+    <span style="color:#C0141A;font-weight:800;" id="catalogo-sel-count"></span>
+  </div>
+
+  <div id="product-grid"><div class="spinner" style="margin:3rem auto;"></div></div>
+</section>
+
+<!-- Barra flotante del Carrito (Cápsula oscura con botón verde Ver Pedido) -->
+<div id="cart-fab" class="cart-pill-bar" onclick="switchTab('pedido')">
+  <div class="cart-pill-left">
+    <div class="cart-pill-icon-box">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/>
+      </svg>
+      <span class="cart-pill-badge" id="cart-fab-count">0</span>
+    </div>
+    <div class="cart-pill-info">
+      <div class="cart-pill-total" id="cart-fab-total-label">$0.00 MXN</div>
+      <div class="cart-pill-sub" id="cart-fab-prods-label">0 productos • 0 unidades</div>
+    </div>
+  </div>
+  <button class="cart-pill-action" onclick="event.stopPropagation(); switchTab('pedido')">
+    Ver Pedido
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+    </svg>
+  </button>
+</div>
+
+<section class="view" id="view-pedido">
+
+  <div class="card" id="cart-summary-card">
+    <div class="pedido-vendor-bar">
+      <span>Vendedor: <strong id="pedido-vendor-name">—</strong></span>
+      <span class="draft-pill">#BORRADOR-PED</span>
+    </div>
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+      Productos en el pedido
+    </div>
+    <div id="cart-lines"></div>
+
+    <div class="global-discount-card">
+      <div class="global-discount-title">
+        <span>Descuento a todo el pedido</span>
+      </div>
+      <div class="global-discount-row">
+        <input type="number" id="global-discount-input" placeholder="0" min="0" max="100" />
+        <button onclick="applyGlobalDiscount()">Aplicar a todo</button>
+      </div>
+      <div class="global-discount-savings" id="global-discount-savings"></div>
+    </div>
+
+    <div class="order-breakdown-row">
+      <span>Subtotal bruto</span><b id="cart-subtotal-bruto">$0.00</b>
+    </div>
+    <div class="order-breakdown-row" id="cart-descuento-row" style="display:none;">
+      <span>Descuento aplicado</span><b style="color:var(--green);" id="cart-descuento-total">−$0.00</b>
+    </div>
+    <div class="order-total-row">
+      <span class="order-total-label">TOTAL A PAGAR</span>
+      <span class="order-total-amount" id="cart-grand-total">$0.00</span>
+    </div>
+  </div>
+
+  <!-- PASO 2 — Asignar cliente / tienda de entrega -->
+  <div class="card checkout-assign-card" id="checkout-assign-card">
+    <div class="checkout-assign-header">
+      <div>
+        <span class="checkout-step-badge">PASO 2</span>
+        <div class="checkout-assign-title">Seleccionar Tienda de Entrega</div>
+      </div>
+      <div class="checkout-assign-total">
+        <div class="checkout-assign-total-label" id="checkout-total-label">Total (0 prods)</div>
+        <div class="checkout-assign-total-amount" id="checkout-total-amount">$0.00</div>
+      </div>
+    </div>
+    <div style="position:relative;margin-bottom:.7rem;">
+      <input type="search" id="checkout-store-search" placeholder="Buscar tienda por nombre, dueño o zona…"
+             oninput="renderCheckoutStorePicker(this.value)" style="padding-left:2.2rem;" />
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"
+           style="position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--gray-400);">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </div>
+    <div id="checkout-store-list"></div>
+  </div>
+
+  <div class="checkout-confirm-row">
+    <button class="checkout-new-btn" onclick="openQuickAddStore()" title="Registrar nueva tienda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+    <button class="btn btn-success" id="confirm-order-btn" onclick="confirmOrder()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirmar y Cobrar
+    </button>
+  </div>
+
+  <button class="btn btn-secondary" style="margin-top:.5rem;" onclick="clearCart()">
+    Vaciar Carrito
+  </button>
+
+  <div id="cart-empty" class="empty-state" style="display:none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
+    <p>El carrito está vacío.<br/>Ve al Catálogo y agrega productos.</p>
+  </div>
+
+</section>
+
+ 
+
+<!-- ═══════════════════════════════════════════════════════════
+     VIEW — HISTORIAL DE PEDIDOS
+══════════════════════════════════════════════════════════════ -->
+<section class="view" id="view-historial">
+  <div class="card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Historial de Pedidos Realizados
+    </div>
+    <div id="historial-list">
+      <div class="empty-state">
+        <p>No hay pedidos registrados en esta sesión.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <div id="toast"></div>
 
-<script src="js/utils.js?v=1"></script>
-<script src="js/app.js?v=1"></script>
-<script src="js/login.js?v=2"></script>
-<script src="js/stock.js?v=1"></script>
-<script src="js/customers.js?v=1"></script>
-<script src="js/vendedores.js?v=1"></script>
+<script src="js/utils.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
+<script src="js/login.js?v=12"></script>
+<script src="js/stock.js?v=12"></script>
+<script src="js/customers.js?v=12"></script>
+<script src="js/vendedores.js?v=12"></script>
+<script src="js/products.js?v=12"></script>
+<script src="js/cart.js?v=12"></script>
+<script src="js/orders.js?v=12"></script>
+
 </body>
 </html>

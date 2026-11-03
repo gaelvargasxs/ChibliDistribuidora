@@ -115,3 +115,25 @@
 /* ── Views ───────────────────────────────────────────────────── */
 .view { display: none; padding: 1rem; padding-bottom: calc(var(--nav-h) + 2rem + env(safe-area-inset-bottom)); }
 .view.active { display: block; }
+
+
+/* Ocultar barras no deseadas en el catálogo */
+#client-bar,
+.client-bar,
+#session-bar,
+.user-session-bar,
+.catalogo-ruta-bar {
+  display: none !important;
+}
+
+/* Aislamiento estricto de vistas por rol */
+body.role-admin #view-catalogo,
+body.role-admin #view-pedido,
+body.role-admin #cart-fab {
+  display: none !important;
+}
+
+body.role-vendedor #view-inventario,
+body.role-vendedor #view-comercios {
+  display: none !important;
+}

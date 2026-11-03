@@ -1,10 +1,97 @@
-@media (min-width: 520px) {
-  #product-grid { grid-template-columns: repeat(3, 1fr); }
-  .view:not(#view-comercios):not(#view-inventario) { max-width: 540px; margin: 0 auto; }
-  #tab-bar { max-width: 540px; margin: 0 auto; }
-  #app-header > * { max-width: 540px; margin: 0 auto; }
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE DESIGN (DESKTOP & MOBILE SAAS LAYOUT)
+══════════════════════════════════════════════════════════════════════════ */
+
+/* ── MÓVIL (< 640px) ── */
+@media (max-width: 639px) {
+  #product-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+    padding: .5rem 1rem 7rem !important;
+  }
+  .catalogo-search-bar {
+    padding: .65rem 1rem !important;
+  }
 }
-/* ── Admin Desktop: layout tipo sidebar (solo admin, pantallas ≥1024px) ── */
+
+/* ── TABLET (640px a 1023px) ── */
+@media (min-width: 640px) and (max-width: 1023px) {
+  #product-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1.15rem !important;
+    padding: 1rem 1.25rem 7rem !important;
+  }
+}
+
+/* ── MÓVIL Y TABLET GENERAL (< 1024px) ── */
+@media (max-width: 1023px) {
+  body.role-vendedor #tab-bar {
+    display: none !important;
+  }
+  .header-hamburger-btn {
+    display: flex !important;
+  }
+  #cart-fab.cart-pill-bar {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 1.25rem !important;
+    width: 92% !important;
+    max-width: 440px !important;
+    z-index: 99999 !important;
+    right: auto !important;
+  }
+}
+
+/* ── DESKTOP VENDEDOR (>= 1024px): PANTALLA COMPLETA ALINEADA ── */
+@media (min-width: 1024px) {
+  .app-drawer,
+  .drawer-backdrop,
+  .header-hamburger-btn {
+    display: none !important;
+  }
+
+  body.role-vendedor #app-header > * {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+  }
+
+  body.role-vendedor #view-catalogo {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 1rem 1.5rem 7rem !important;
+  }
+
+  body.role-vendedor .catalogo-search-bar,
+  body.role-vendedor .cat-chips,
+  body.role-vendedor .catalogo-count-bar {
+    max-width: 1200px !important;
+    margin: 0 auto .75rem !important;
+    border-radius: 12px !important;
+  }
+
+  body.role-vendedor #product-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.25rem !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: .5rem 0 7rem !important;
+  }
+
+  body.role-vendedor #cart-fab.cart-pill-bar {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: 2rem !important;
+    width: 480px !important;
+    max-width: 90vw !important;
+    z-index: 99999 !important;
+    right: auto !important;
+  }
+}
+
+/* ── ADMIN DESKTOP: layout tipo sidebar (solo admin, pantallas ≥1024px) ── */
 @media (min-width: 1024px) {
   body.role-admin #app-header { margin-left: 240px; }
   body.role-admin #tab-bar {
@@ -36,7 +123,6 @@
     grid-template-columns: repeat(4, 1fr);
     padding: 0 0 .85rem;
   }
-  /* En desktop el dashboard tiene padding normal como el resto de views */
   body.role-admin #admin-subview-dashboard { padding: 0; }
   body.role-admin .dash-header-bar { padding: 0 0 .5rem; }
   body.role-admin .dash-panel-title { padding: 0; font-size: 1.75rem; }
@@ -45,9 +131,7 @@
   body.role-admin .dash-pedidos-card  { margin: 0 0 .85rem; }
   body.role-admin .dash-stock-section { padding: 0 0 .85rem; }
   body.role-admin .dash-ops-section   { padding: 0 0 .85rem; }
-  /* Grid 2 col para las secciones de abajo */
   body.role-admin .dash-bottom-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start;
   }
 }
-

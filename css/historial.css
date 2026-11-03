@@ -1,0 +1,58 @@
+
+/* ── Historial card ──────────────────────────────────────────── */
+.historial-card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); margin-bottom: .7rem;
+  overflow: hidden; border-left: 4px solid var(--gray-200);
+}
+.historial-card { border-left-color: var(--green); }
+.historial-head {
+  padding: .7rem .9rem .4rem;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem;
+}
+.historial-date { font-size: .72rem; color: var(--gray-400); margin-top: .1rem; }
+.historial-body { padding: .3rem .9rem .7rem; }
+.historial-lines { font-size: .78rem; color: var(--gray-600); line-height: 1.7; }
+.historial-total {
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid var(--gray-100); margin-top: .5rem; padding-top: .5rem;
+  font-weight: 800;
+}
+.historial-total .amt { color: var(--red-700); font-size: 1rem; }
+
+/* ── Historial: stats + filtros + tarjetas nuevas ────────────── */
+.hist-stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: .8rem; }
+.hist-stat-card {
+  background: var(--gray-50); border-radius: var(--radius-sm);
+  padding: .75rem .85rem;
+}
+.hist-stat-label { font-size: .72rem; color: var(--gray-400); font-weight: 600; }
+.hist-stat-value { font-size: 1.3rem; font-weight: 900; color: var(--gray-900); margin-top: .15rem; }
+.hist-stat-of { font-size: .82rem; font-weight: 700; color: var(--gray-400); }
+
+.hist-order-card {
+  background: var(--white); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm); margin-bottom: .6rem; overflow: hidden;
+}
+.hist-order-top {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .75rem .9rem; cursor: pointer;
+}
+.hist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--gray-300); }
+.hist-dot.entregado { background: var(--green); }
+.hist-dot.cancelado { background: var(--red-600); }
+.hist-order-main { flex: 1; min-width: 0; }
+.hist-order-folio-row { display: flex; align-items: center; gap: .45rem; }
+.hist-order-folio { font-weight: 800; font-size: .88rem; color: var(--gray-900); }
+.hist-status-pill {
+  font-size: .64rem; font-weight: 800; padding: .12rem .5rem; border-radius: 20px;
+}
+.hist-status-pill.entregado { background: var(--green-lt); color: var(--green); }
+.hist-status-pill.cancelado { background: var(--red-100); color: var(--red-700); }
+.hist-order-meta { font-size: .74rem; color: var(--gray-400); margin-top: .15rem; }
+.hist-order-right { text-align: right; flex-shrink: 0; display: flex; align-items: center; gap: .5rem; }
+.hist-order-amt { font-weight: 800; font-size: .95rem; color: var(--red-700); }
+.hist-chevron { transition: transform .2s; color: var(--gray-400); flex-shrink: 0; }
+.hist-order-card.open .hist-chevron { transform: rotate(180deg); }
+.hist-order-detail { display: none; padding: 0 .9rem .8rem; border-top: 1px solid var(--gray-100); margin-top: -1px; }
+.hist-order-card.open .hist-order-detail { display: block; padding-top: .6rem; }

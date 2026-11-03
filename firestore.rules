@@ -1,0 +1,69 @@
+rules_version = '2';
+
+/**
+ * ===============================================================
+ * DISTRIBUIDORA CHIBLI - REGLAS DE SEGURIDAD (ENTREGA 3)
+ * ===============================================================
+ * Módulos cubiertos en este avance según cronograma:
+ * 1. Autenticación y Control de Roles (Login con Google OAuth + 2FA)
+ * 2. Control de Inventarios y Existencias (products)
+ * 3. Directorio de Tiendas y Rutas (customers)
+ * 4. Directorio de Vendedores y Accesos (vendedores)
+ * ===============================================================
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── FUNCIONES DE VERIFICACIÓN DE ROL ──
+
+    // Verifica si el usuario ha iniciado sesión en Firebase
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Verifica si el usuario autenticado tiene el rol de Administrador
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'nel0407gael@gmail.com' ||
+        request.auth.token.email == 'admin@chibli.com'
+      );
+    }
+
+    // ── 1. PRODUCTOS (INVENTARIO Y STOCK) ──
+    match /products/{productId} {
+      // Lectura permitida para consultar catálogo y existencias en tiempo real
+      allow read: if true;
+
+      // Solo el Administrador puede registrar nuevos productos, cambiar precios o alterar stock
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── 2. TIENDAS (CLIENTES DE DISTRIBUCIÓN) ──
+    match /customers/{customerId} {
+      // Consulta del directorio de tiendas en ruta
+      allow read: if true;
+
+      // Registro y actualización de tiendas de entrega
+      allow create, update: if isAuthenticated() || isAdmin();
+
+      // Solo el Administrador tiene permiso para dar de baja definitiva una tienda
+      allow delete: if isAdmin();
+    }
+
+    // ── 3. VENDEDORES (DIRECTORIO DE ACCESOS) ──
+    match /vendedores/{vendedorId} {
+      // Permite lectura para el selector del login de preventistas
+      allow read: if true;
+
+      // Solo el Administrador puede registrar nuevos vendedores o eliminar sus accesos
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ── 4. PRINCIPIO DE MENOR PRIVILEGIO (DEFAULT DENY) ──
+    // Cualquier otra colección no especificada tiene acceso bloqueado por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,35 @@
+/* ── @media print — ticket térmico ──────────────────────────── */
+@media print {
+  body > *:not(#print-frame) { display: none !important; }
+  #print-frame { display: block !important; }
+  #print-frame .thermal-ticket {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 10pt;
+    width: var(--thermal-width, 58mm);
+    margin: 0 auto 4mm;
+    padding: 0;
+    color: #000;
+    background: #fff;
+  }
+  #print-frame .thermal-ticket .th-header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 4pt; margin-bottom: 4pt; }
+  #print-frame .thermal-ticket .th-title  { font-size: 11pt; font-weight: bold; }
+  #print-frame .thermal-ticket .th-sub    { font-size: 7pt; }
+  #print-frame .thermal-ticket .th-store  { font-size: 10pt; font-weight: bold; margin: 3pt 0 1pt; }
+  #print-frame .thermal-ticket .th-meta   { font-size: 7pt; }
+  #print-frame .thermal-ticket .th-divider { border: none; border-top: 1px dashed #000; margin: 4pt 0; }
+  #print-frame .thermal-ticket .th-row    { display: flex; justify-content: space-between; font-size: 8pt; margin: 2pt 0; }
+  #print-frame .thermal-ticket .th-row .name { flex: 1; padding-right: 3pt; word-break: break-word; }
+  #print-frame .thermal-ticket .th-row .qty  { width: 20pt; text-align: center; flex-shrink: 0; }
+  #print-frame .thermal-ticket .th-row .sub  { width: 38pt; text-align: right; flex-shrink: 0; }
+  #print-frame .thermal-ticket .th-total-row { display: flex; justify-content: space-between; font-size: 12pt; font-weight: bold; border-top: 2px solid #000; padding-top: 4pt; margin-top: 3pt; }
+  #print-frame .thermal-ticket .th-ganancia  { display: flex; justify-content: space-between; font-size: 7pt; margin-top: 2pt; color: #444; }
+  #print-frame .thermal-ticket .th-footer  { text-align: center; font-size: 7pt; margin-top: 6pt; border-top: 1px dashed #000; padding-top: 4pt; }
+  #print-frame .thermal-ticket .th-cut    { text-align: center; font-size: 7pt; margin-top: 6pt; letter-spacing: .4em; }
+  @page { margin: 0mm; size: auto; }
+}
+/* ── Print ───────────────────────────────────────────────────── */
+@media print {
+  body > * { display:none !important; }
+  #print-frame { display:block !important; }
+}
+#print-frame { display:none; }

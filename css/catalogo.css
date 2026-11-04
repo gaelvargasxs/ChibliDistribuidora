@@ -428,8 +428,7 @@
   cursor: pointer;
   transition: transform 0.1s;
 }
-.b2b-btn-plus.plus-caja,
-.b2b-btn-plus.plus-pieza {
+.b2b-btn-plus.plus-caja {
   width: 36px;
   height: 36px;
   border-radius: 9px;
@@ -444,6 +443,24 @@
   cursor: pointer;
   transition: transform 0.1s;
 }
+.b2b-btn-plus.plus-pieza {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #E2E8F0;
+  color: #0F172A;
+  border: none;
+  font-size: 1.3rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.pieza-stepper.active .b2b-btn-plus.plus-pieza {
+  background: #CBD5E1;
+}
 .b2b-btn-minus:active,
 .b2b-btn-plus:active {
   transform: scale(0.92);
@@ -457,4 +474,85 @@
 }
 .b2b-stepper-box.active .b2b-qty-val {
   color: #991B1B !important;
+}
+
+/* Responsive B2B Card tuning for smartphones */
+@media (max-width: 639px) {
+  .b2b-product-card {
+    padding: 0.85rem 1rem !important;
+    border-radius: 16px !important;
+  }
+  .b2b-card-top {
+    gap: 0.75rem !important;
+  }
+  .b2b-card-img-wrap {
+    width: 76px !important;
+    height: 76px !important;
+    border-radius: 12px !important;
+  }
+  .b2b-card-title {
+    font-size: 1.15rem !important;
+    margin: 1px 0 2px 0 !important;
+  }
+  .b2b-card-sub {
+    font-size: 0.82rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .b2b-pricing-box {
+    padding: 0.65rem 0.85rem !important;
+    margin-top: 0.65rem !important;
+    border-radius: 10px !important;
+  }
+  .b2b-price-main {
+    font-size: 1.25rem !important;
+  }
+  .b2b-stepper-row {
+    gap: 0.5rem !important;
+    margin-top: 0.65rem !important;
+  }
+  .b2b-stepper-box {
+    padding: 0.35rem 0.55rem !important;
+    border-radius: 10px !important;
+  }
+  .b2b-stepper-box .b2b-stepper-lbl {
+    font-size: 0.85rem !important;
+  }
+  .b2b-btn-minus,
+  .b2b-btn-plus {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1.15rem !important;
+  }
+}
+
+/* Título y Stock en la misma fila superior (Fiel a Stitch B2B) */
+.b2b-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 2px;
+}
+.b2b-card-title-row .b2b-card-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.2;
+}
+.b2b-card-title-row .b2b-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #16A34A;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.b2b-btn-plus.plus-pieza,
+.b2b-btn-plus.plus-caja,
+.b2b-btn-plus {
+  background: #991B1B !important;
+  color: #FFFFFF !important;
 }

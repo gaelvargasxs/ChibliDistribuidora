@@ -186,3 +186,6 @@ async function deleteVendedor(id) {
     }
   });
 }
+
+window.renderVendedores = renderVendedoresList;
+window.renderVendedoresList = renderVendedoresList;

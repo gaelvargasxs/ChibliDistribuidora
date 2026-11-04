@@ -104,16 +104,17 @@ function renderProducts(filter = "") {
                     ${imgMarkup}
         </div>
         <div class="b2b-card-header-info">
-          <div class="b2b-top-meta-row" style="justify-content:flex-end;">
+          <div class="b2b-card-title-row">
+            <h3 class="b2b-card-title">${esc(p.name)}</h3>
             <span class="b2b-stock-badge ${stockBadgeClass}">
               <span class="b2b-stock-dot"></span>
               ${stockTxt}
             </span>
           </div>
-          <h3 class="b2b-card-title">${esc(p.name)}</h3>
-          <div class="b2b-card-sub">Caja ${cajaPiezas} × ${esc(p.unit || "1L")}</div>
+          <div class="b2b-card-sub">Caja ${cajaPiezas} × ${esc(p.unit || "500ml")}</div>
           <div class="b2b-tags-row">
             <span class="b2b-tag-cat">${esc((p.category || "BÁSICOS").toUpperCase())}</span>
+            ${p.prioritario ? '<span class="b2b-tag-priority">⚡ Prioridad</span>' : ''}
           </div>
         </div>
       </div>

@@ -154,3 +154,6 @@ async function deleteCustomer(id) {
     }
   });
 }
+
+window.renderCustomers = renderCustomersList;
+window.renderCustomersList = renderCustomersList;

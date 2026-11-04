@@ -6,7 +6,8 @@ if (typeof window.orders === "undefined") window.orders = [];
 function changeQty(productKey, delta) {
   const isCaja   = productKey.endsWith("_caja");
   const productId = isCaja ? productKey.replace("_caja", "") : productKey;
-  const product  = products.find(p => p.id === productId);
+  const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
+  const product  = prodsList.find(p => p.id === productId);
   if (!product) return;
 
   const cajaPiezas = parseInt(product.piezas) || 0;
@@ -65,9 +66,20 @@ function updateCartUI() {
     }
   }
 
-  // Header badge
+  // Header badge & button
   const hTotal = document.getElementById("header-cart-total");
   if (hTotal) hTotal.textContent = `Carrito: $${totalAmt.toFixed(2)}`;
+  const hCounter = document.getElementById("header-cart-counter");
+  if (hCounter) hCounter.textContent = totalItems;
+  const hBtn = document.getElementById("header-cart-btn");
+  if (hBtn) {
+    hBtn.style.display = document.body.classList.contains("role-vendedor") ? "inline-flex" : "none";
+    if (totalItems > 0) {
+      hBtn.classList.add("has-items");
+    } else {
+      hBtn.classList.remove("has-items");
+    }
+  }
 
   // Actualizar count en catálogo
   const selCountEl = document.getElementById("catalogo-sel-count");
@@ -84,7 +96,8 @@ function calcTotal() {
   return Object.entries(_cart).reduce((sum, [key, qty]) => {
     const isCaja    = key.endsWith("_caja");
     const productId = isCaja ? key.replace("_caja", "") : key;
-    const p = products.find(pr => pr.id === productId);
+    const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
+    const p = prodsList.find(pr => pr.id === productId);
     if (!p) return sum;
     const cajaPiezas = parseInt(p.piezas) || 12;
     const unitQty = qty * (isCaja ? cajaPiezas : 1);
@@ -140,7 +153,8 @@ function renderCart() {
   linesEl.innerHTML = Object.entries(cart).map(([key, qty]) => {
     const isCaja    = key.endsWith("_caja");
     const productId = isCaja ? key.replace("_caja", "") : key;
-    const p = products.find(pr => pr.id === productId);
+    const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
+    const p = prodsList.find(pr => pr.id === productId);
     if (!p) return "";
     const cajaPiezas = parseInt(p.piezas) || 1;
     const unitQty    = isCaja ? cajaPiezas * qty : qty;
@@ -357,7 +371,8 @@ async function confirmOrder() {
   const lines = Object.entries(cart).map(([key, qty]) => {
     const isCaja    = key.endsWith("_caja");
     const productId = isCaja ? key.replace("_caja", "") : key;
-    const p = products.find(pr => pr.id === productId);
+    const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
+    const p = prodsList.find(pr => pr.id === productId);
     const cajaPiezas = parseInt(p.piezas) || 1;
     const unitQty    = isCaja ? cajaPiezas * qty : qty;
     const descPct    = descuentos[productId] || 0;

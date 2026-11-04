@@ -159,3 +159,40 @@
   text-transform: uppercase; color: var(--gray-400);
   margin: 1rem 0 .5rem; padding: 0 .1rem;
 }
+
+/* Header Cart Button */
+.header-cart-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #F1F5F9;
+  border: 1.5px solid #E2E8F0;
+  color: #334155;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.header-cart-pill-btn:active {
+  transform: scale(0.94);
+}
+.header-cart-pill-btn.has-items {
+  background: #FFF1F2 !important;
+  border-color: #FFE4E6 !important;
+  color: #991B1B !important;
+}
+.header-cart-counter {
+  background: #64748B;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  padding: 1px 7px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  min-width: 18px;
+  text-align: center;
+}
+.header-cart-pill-btn.has-items .header-cart-counter {
+  background: #991B1B !important;
+}

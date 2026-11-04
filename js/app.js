@@ -1,18 +1,26 @@
 // ═══ APP · ESTADO Y ESCUCHAS EN TIEMPO REAL (FIRESTORE) ═══
 const ADMIN_PIN = "1234";
 let adminUnlocked = false;
-let products   = [];               // Colección "products"
-let vendedores = [];               // Colección "vendedores"
-let customers  = [];               // Colección "customers"
+let products   = window.products || [];
+let vendedores = window.vendedores || [];
+let customers  = window.customers || [];
 
 let currentActiveTab = "inventario";
 let currentMgmtSubtab = "tiendas";
-let cart = {};
-let descuentos = {};
+let cart = window.cart || {};
+let descuentos = window.descuentos || {};
 let activeCustomerId = null;
 let activeCustomerData = null;
-let orders = [];
-let activeCategory = "";
+let orders = window.orders || [];
+let activeCategory = window.activeCategory || "";
+window.activeCategory = activeCategory;
+window.cart = cart;
+window.descuentos = descuentos;
+window.orders = orders;
+window.products = products;
+window.vendedores = vendedores;
+window.customers = customers;
+
 
 
 function initApp() {
@@ -88,6 +96,9 @@ function switchMainTab(tab) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".drawer-nav-item").forEach(d => d.classList.remove("active"));
+  document.querySelectorAll("[data-drawer-admin]").forEach(b => {
+    b.classList.toggle("active", b.dataset.drawerAdmin === tab);
+  });
 
   const isInv = tab === "inventario";
   const btnInv = document.getElementById("tab-btn-inventario");
@@ -188,6 +199,8 @@ function switchTab(tab, sub) {
     renderProducts();
   } else if (tab === "pedido" && typeof renderCart === "function") {
     renderCart();
+  } else if (tab === "historial" && typeof renderHistorial === "function") {
+    renderHistorial();
   }
 
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -217,3 +230,79 @@ document.addEventListener("click", (e) => {
     menu.classList.remove("open");
   }
 });
+
+// ── PROTECCIÓN PRESENTACIÓN (DATOS SEMILLA EN CASO DE INTERNET LENTO O FALLO) ──
+setTimeout(() => {
+  if (!products.length && (!window.products || !window.products.length)) {
+    console.info("Cargando catálogo base de demostración offline para la presentación...");
+    products = [
+      { id: "1", name: "Agua Ciel", category: "AGUA", price: 50, precioCaja: 1140, precioCosto: 38, piezas: 24, stock: 44, unit: "500ml", codigo: "AGU-24-500", emoji: "💧" },
+      { id: "2", name: "Power", category: "AGUA", price: 60, precioCaja: 684, precioCosto: 46, piezas: 12, stock: 171, unit: "1L", codigo: "POW-12-1L", prioritario: true, emoji: "⚡" },
+      { id: "3", name: "Aceite Vegetal Mixto", category: "BÁSICOS", price: 28, precioCaja: 320, precioCosto: 21, piezas: 12, stock: 48, unit: "1L", codigo: "ACE-12-VEG", prioritario: true, emoji: "🌻" },
+      { id: "4", name: "Shampoo Savile", category: "BÁSICOS", price: 50, precioCaja: 570, precioCosto: 39, piezas: 12, stock: 57, unit: "1L", codigo: "SAV-12-1L", emoji: "🧴" },
+      { id: "5", name: "Galletas Marías Gamesa", category: "BOTANAS", price: 40, precioCaja: 456, precioCosto: 31, piezas: 12, stock: 40, unit: "Caja", codigo: "MAR-12-PZ", emoji: "🍪" },
+      { id: "6", name: "Refresco Pepsi 600ml", category: "REFRESCOS", price: 22, precioCaja: 240, precioCosto: 17, piezas: 12, stock: 300, unit: "600ml", codigo: "PEP-12-600", emoji: "🥤" },
+      { id: "7", name: "Dulce Gael Tradicional", category: "DULCES", price: 2500, precioCaja: 57000, precioCosto: 1900, piezas: 24, stock: 150, unit: "500g", codigo: "GAE-24-500", emoji: "🍬" }
+    ];
+    window.products = products;
+    if (typeof renderStockList === "function") renderStockList();
+    if (typeof renderProducts === "function") renderProducts();
+  }
+  if (!customers.length && (!window.customers || !window.customers.length)) {
+    customers = [
+      { id: "c1", storeName: "Abarrotes Don Pepe", ownerName: "José Pérez", phone: "6181234567", zone: "Centro", address: "Av. 20 de Noviembre #402" },
+      { id: "c2", storeName: "Tienda San Judas", ownerName: "María López", phone: "6189876543", zone: "Norte", address: "Calle Victoria #115" },
+      { id: "c3", storeName: "Super El Ahorro", ownerName: "Roberto Gómez", phone: "6185551234", zone: "Oriente", address: "Blvd. Dolores del Río #89" }
+    ];
+    window.customers = customers;
+    if (typeof renderCustomersList === "function") renderCustomersList();
+  }
+  if (!vendedores.length && (!window.vendedores || !window.vendedores.length)) {
+    vendedores = [
+      { id: "1", folio: "VEN-001", nombre: "Carlos Morales", email: "vendedor1@chibli.com", activo: true, pin: "1234" },
+      { id: "2", folio: "VEN-002", nombre: "Ana Martínez", email: "vendedor2@chibli.com", activo: true, pin: "1234" }
+    ];
+    window.vendedores = vendedores;
+    if (typeof renderVendedoresList === "function") renderVendedoresList();
+    if (typeof populateLoginVendedores === "function") populateLoginVendedores();
+  }
+
+  if (!orders.length && (!window.orders || !window.orders.length)) {
+    orders = [
+      {
+        id: "PED-1001",
+        customerName: "Abarrotes Don Pepe",
+        ownerName: "José Pérez",
+        phone: "6181234567",
+        address: "Av. 20 de Noviembre #402",
+        status: "Entregado",
+        vendedorNombre: "Carlos Morales",
+        vendedorId: "1", vendedorFolio: "VEN-001",
+        total: 1824.00,
+        createdAt: { toDate: () => new Date(Date.now() - 3600000 * 2) },
+        lines: [
+          { name: "Agua Ciel 24x500ml (1 caja)", qty: 24, cajas: 1, price: 1140, subtotal: 1140, emoji: "💧" },
+          { name: "Power 12x1L (1 caja)", qty: 12, cajas: 1, price: 684, subtotal: 684, emoji: "⚡" }
+        ]
+      },
+      {
+        id: "PED-1002",
+        customerName: "Tienda San Judas",
+        ownerName: "María López",
+        phone: "6189876543",
+        address: "Calle Victoria #115",
+        status: "Entregado",
+        vendedorNombre: "Carlos Morales",
+        vendedorId: "1", vendedorFolio: "VEN-001",
+        total: 960.00,
+        createdAt: { toDate: () => new Date(Date.now() - 3600000 * 5) },
+        lines: [
+          { name: "Aceite Vegetal Mixto (3 cajas)", qty: 36, cajas: 3, price: 320, subtotal: 960, emoji: "🌻" }
+        ]
+      }
+    ];
+    window.orders = orders;
+    if (typeof renderHistorial === "function") renderHistorial();
+  }
+
+}, 1200);

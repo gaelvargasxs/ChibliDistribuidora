@@ -25,7 +25,15 @@
 
 /* ── MÓVIL Y TABLET GENERAL (< 1024px) ── */
 @media (max-width: 1023px) {
-  body.role-vendedor #tab-bar {
+  /* Admin en móvil: sin barra inferior, vista limpia */
+  body.role-admin #view-inventario,
+  body.role-admin #view-comercios {
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom, 15px)) !important;
+  }
+
+  #tab-bar,
+  body.role-vendedor #tab-bar,
+  body.role-admin #tab-bar {
     display: none !important;
   }
   .header-hamburger-btn {

@@ -26,6 +26,8 @@
 <link rel="stylesheet" href="css/responsive.css?v=12">
 <link rel="stylesheet" href="css/inventario.css?v=12">
 <link rel="stylesheet" href="css/tiendas-vendedores.css?v=12">
+  <link rel="stylesheet" href="css/catalogo-mobile.css?v=3">
+<link rel="stylesheet" href="css/pedido-mobile.css?v=1">
 </head>
 <body>
 
@@ -786,7 +788,7 @@
   <div class="catalogo-search-bar">
     <div class="catalogo-search-input-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="search" id="product-search" placeholder="Buscar por nombre, código o categoría…" oninput="filterProducts()" />
+      <input type="search" id="product-search" placeholder="Buscar producto o categoría…" oninput="filterProducts()" />
     </div>
   </div>
 
@@ -809,9 +811,10 @@
       </svg>
       <span class="cart-pill-badge" id="cart-fab-count">0</span>
     </div>
-    <div class="cart-pill-info">
+    <div class="cart-pill-info" aria-live="polite" aria-atomic="true">
+      <span class="ch-total-caption">Total del pedido</span>
       <div class="cart-pill-total" id="cart-fab-total-label">$0.00 MXN</div>
-      <div class="cart-pill-sub" id="cart-fab-prods-label">0 productos • 0 unidades</div>
+      <div class="cart-pill-sub" id="cart-fab-prods-label">0 piezas</div>
     </div>
   </div>
   <button class="cart-pill-action" onclick="event.stopPropagation(); switchTab('pedido')">
@@ -823,52 +826,50 @@
 </div>
 
 <section class="view" id="view-pedido">
+  <div class="order-page-heading"><button type="button" onclick="switchTab('catalogo')" aria-label="Volver al catálogo">←</button><h2>Resumen del pedido</h2></div>
 
   <div class="card" id="cart-summary-card">
     <div class="pedido-vendor-bar">
       <span>Vendedor: <strong id="pedido-vendor-name">—</strong></span>
-      <span class="draft-pill">#BORRADOR-PED</span>
+      <span class="draft-pill">Borrador</span>
     </div>
     <div class="card-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/></svg>
-      Productos en el pedido
+      Productos <span id="order-product-count"></span>
     </div>
     <div id="cart-lines"></div>
 
     <div class="global-discount-card">
       <div class="global-discount-title">
-        <span>Descuento a todo el pedido</span>
+        <span>Descuento a todo el pedido (%)</span>
       </div>
       <div class="global-discount-row">
-        <input type="number" id="global-discount-input" placeholder="0" min="0" max="100" />
+        <input type="number" id="global-discount-input" placeholder="0" min="0" max="100" inputmode="decimal" aria-label="Descuento general en porcentaje" />
         <button onclick="applyGlobalDiscount()">Aplicar a todo</button>
       </div>
       <div class="global-discount-savings" id="global-discount-savings"></div>
     </div>
 
-    <div class="order-breakdown-row">
+    <div class="order-payment-summary"><div class="order-breakdown-row">
       <span>Subtotal bruto</span><b id="cart-subtotal-bruto">$0.00</b>
     </div>
     <div class="order-breakdown-row" id="cart-descuento-row" style="display:none;">
       <span>Descuento aplicado</span><b style="color:var(--green);" id="cart-descuento-total">−$0.00</b>
     </div>
     <div class="order-total-row">
-      <span class="order-total-label">TOTAL A PAGAR</span>
+      <span class="order-total-label">Total a cobrar</span>
       <span class="order-total-amount" id="cart-grand-total">$0.00</span>
-    </div>
+    </div></div>
   </div>
 
   <!-- PASO 2 — Asignar cliente / tienda de entrega -->
   <div class="card checkout-assign-card" id="checkout-assign-card">
     <div class="checkout-assign-header">
       <div>
-        <span class="checkout-step-badge">PASO 2</span>
-        <div class="checkout-assign-title">Seleccionar Tienda de Entrega</div>
+        <span class="checkout-step-badge">TIENDA</span>
+        <div class="checkout-assign-title">Asignar este pedido</div>
       </div>
-      <div class="checkout-assign-total">
-        <div class="checkout-assign-total-label" id="checkout-total-label">Total (0 prods)</div>
-        <div class="checkout-assign-total-amount" id="checkout-total-amount">$0.00</div>
-      </div>
+      <button type="button" class="order-new-store" onclick="openQuickAddStore()">+ Registrar tienda</button>
     </div>
     <div style="position:relative;margin-bottom:.7rem;">
       <input type="search" id="checkout-store-search" placeholder="Buscar tienda por nombre, dueño o zona…"
@@ -881,18 +882,16 @@
     <div id="checkout-store-list"></div>
   </div>
 
+  <p id="order-save-error" role="alert" hidden style="color:#a51d2d;background:#fff0f1;padding:12px;border-radius:10px;font-size:14px;"></p>
   <div class="checkout-confirm-row">
-    <button class="checkout-new-btn" onclick="openQuickAddStore()" title="Registrar nueva tienda">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    </button>
     <button class="btn btn-success" id="confirm-order-btn" onclick="confirmOrder()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><polyline points="20 6 9 17 4 12"/></svg>
       Confirmar y Cobrar
     </button>
   </div>
 
-  <button class="btn btn-secondary" style="margin-top:.5rem;" onclick="clearCart()">
-    Vaciar Carrito
+  <button id="btn-clear-cart" class="btn btn-secondary" style="margin-top:.5rem;" onclick="clearCart()">
+    Vaciar pedido
   </button>
 
   <div id="cart-empty" class="empty-state" style="display:none;">
@@ -930,8 +929,8 @@
 <script src="js/bulk-edit.js?v=13"></script>
 <script src="js/customers.js?v=13"></script>
 <script src="js/vendedores.js?v=13"></script>
-<script src="js/products.js?v=13"></script>
-<script src="js/cart.js?v=13"></script>
+<script src="js/products.js?v=17"></script>
+<script src="js/cart.js?v=17"></script>
 <script src="js/tickets.js?v=13"></script>
 <script src="js/historial.js?v=13"></script>
 <script src="js/orders.js?v=13"></script>

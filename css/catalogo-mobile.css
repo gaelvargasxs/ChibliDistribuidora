@@ -1,0 +1,99 @@
+/* Catálogo móvil. Cargar después de las hojas de estilo existentes. */
+body #view-catalogo { background:#f6f6f7; }
+body #view-catalogo #product-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; padding:8px 14px calc(120px + env(safe-area-inset-bottom)); max-width:1120px; margin:0 auto; width:100%; box-sizing:border-box; }
+#view-catalogo .catalogo-search-bar { padding:16px 14px 10px; background:#f6f6f7; border:0; }
+#view-catalogo .catalogo-search-input-wrap { background:white; border:1px solid #e5e5e8; border-radius:14px; padding:12px; }
+#view-catalogo #product-search { min-width:0; width:100%; font-size:16px; }
+#view-catalogo .cat-chips { background:#f6f6f7; padding:0 14px 12px; border:0; }
+#view-catalogo .cat-chip { min-height:44px; padding:8px 16px; font-size:13px; font-weight:600; }
+#view-catalogo .cat-chip.active { background:#b91422; border-color:#b91422; }
+#view-catalogo .catalogo-count-bar { padding:8px 16px; text-transform:none; letter-spacing:0; font-size:12px; gap:12px; flex-wrap:wrap; }
+.ch-product { min-width:0; padding:16px; border:1px solid #e7e7eb; border-radius:20px; background:white; box-shadow:0 3px 10px #18202a04; color:#20232b; font-family:inherit; }
+.ch-product.in-cart { border-color:#c0141a; box-shadow:0 0 0 1px #c0141a; }
+.ch-product-head { display:flex; gap:14px; align-items:center; }
+.ch-image { width:76px; height:84px; flex-shrink:0; background:#f6f6f7; border-radius:14px; display:grid; place-items:center; position:relative; overflow:hidden; }
+.ch-image span { font-size:32px; }
+.ch-image img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:#f6f6f7; padding:6px; box-sizing:border-box; }
+.ch-product-info { min-width:0; flex:1; }
+.ch-product-meta { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; column-gap:8px; row-gap:5px; margin-bottom:6px; }
+.ch-category { color:#777b85; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+.ch-product h3 { font-size:17px; line-height:1.3; font-weight:750; margin:4px 0; overflow-wrap:anywhere; }
+.ch-unit { margin:0 0 6px; color:#767b85; font-size:12px; }
+.ch-stock { display:inline-flex; align-items:center; gap:7px; color:#15803d; font-size:13px; font-weight:750; white-space:nowrap; margin-left:auto; }
+.ch-stock::before { content:""; width:7px; height:7px; border-radius:50%; background:#22c55e; }
+.ch-stock.out { color:#8b6161; }.ch-stock.out::before { background:currentColor; }
+.ch-prices { display:grid; grid-template-columns:1fr 1fr; margin-top:16px; padding:14px 0; border-top:1px solid #f0f0f2; border-bottom:1px solid #f0f0f2; gap:12px; }
+.ch-prices>div { min-width:0; }.ch-prices>div+div { border-left:1px solid #ededf0; padding-left:16px; }
+.ch-prices span { display:block; font-size:11px; color:#737782; margin-bottom:5px; }
+.ch-prices strong { display:block; font-size:21px; letter-spacing:-.5px; font-weight:750; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.ch-quantities { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding-top:12px; }
+.ch-quantity-label { display:block; color:#767a84; font-size:11px; margin:0 0 6px; font-weight:600; }
+.ch-controls { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; align-items:center; background:#f5f5f7; border-radius:12px; padding:3px; }
+.ch-controls button { width:44px; height:44px; padding:0; border:0; border-radius:10px; background:white; color:#333844; font-size:23px; font-family:inherit; cursor:pointer; touch-action:manipulation; }
+.ch-controls .ch-add { background:#f9e9eb; color:#b91422; }
+.ch-quantity.active .ch-add { background:#b91422; color:white; }
+.ch-quantity.active .ch-quantity-label { color:#b91422; }
+.ch-controls span { text-align:center; font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
+.ch-controls button:active { transform:scale(.96); }
+#view-catalogo button:focus-visible { outline:3px solid #2563eb; outline-offset:3px; }
+.ch-quantities.single,.ch-prices.single { grid-template-columns:1fr; }
+@media(min-width:760px) { body #view-catalogo #product-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; } }
+@media(max-width:350px) { .ch-product { padding:12px; }.ch-quantities { gap:8px; }.ch-prices strong { font-size:19px; }.ch-product h3 { font-size:16px; }.ch-image { width:60px;height:72px; } }
+
+/* v08: acabado inspirado en la referencia de Stitch. */
+body #view-catalogo { background:#f7f8fa; }
+#view-catalogo .catalogo-search-bar,#view-catalogo .cat-chips { background:#f7f8fa; }
+#view-catalogo .catalogo-search-input-wrap { border-radius:12px; border-color:#edf0f3; box-shadow:0 2px 6px #10182803; }
+#view-catalogo .cat-chip { border:1px solid #edf0f3; font-weight:650; }
+#view-catalogo .cat-chip.active { background:#df202b; border-color:#df202b; }
+.ch-product { border-radius:16px; border-color:#edf0f3; padding:16px; box-shadow:0 2px 6px #18202a03; transition:border-color .15s,box-shadow .15s; }
+.ch-product.in-cart { border-color:#df202b; box-shadow:0 0 0 .5px #df202b; }
+.ch-product-meta { margin-bottom:12px; min-height:16px; }
+.ch-category { font-size:11px; letter-spacing:.035em; color:#647083; font-weight:600; }
+.ch-product-head { gap:12px; }
+.ch-image { width:64px; height:68px; border-radius:10px; }
+.ch-product h3 { font-size:17px; margin:0 0 4px; font-weight:750; }
+.ch-unit { font-size:12px; line-height:1.4; margin:0; color:#647083; }
+.ch-stock { font-size:12px; font-weight:650; }
+.ch-prices,.ch-prices.single { display:flex; flex-direction:column; gap:8px; padding:12px; margin-top:14px; background:#f3f4f6; border:0; border-radius:10px; }
+.ch-prices>div,.ch-prices>div+div { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:0; border:0; }
+.ch-prices span { font-size:12px; margin:0; color:#586579; }
+.ch-prices strong { font-size:16px; letter-spacing:0; font-weight:750; flex-shrink:0; }
+.ch-quantities { padding-top:12px; gap:10px; }
+.ch-quantities[hidden] { display:none; }
+.ch-quantity { background:#f0f1f3; border-radius:10px; padding:8px 6px 6px; }
+.ch-quantity-label { margin:0 0 5px 3px; font-size:12px; color:#566174; }
+.ch-controls { padding:0; background:transparent; grid-template-columns:44px minmax(20px,1fr) 44px; }
+.ch-controls button { border-radius:8px; font-size:22px; }
+.ch-controls .ch-add { background:white; color:#202b3c; }
+.ch-quantity.active .ch-add { background:#df202b; color:white; }
+.ch-quantity.active .ch-controls span { color:#c0141a; }
+.ch-controls button:disabled { background:#f7f7f8; color:#9ba2ae; cursor:default; transform:none; }
+.ch-product.is-out .ch-image { filter:grayscale(1); }
+.ch-product.is-out h3,.ch-product.is-out .ch-prices strong { color:#737b87; }
+.ch-stock.out { color:#b8414c; }
+.ch-out-message { margin:12px 0 0; padding:12px; background:#f0f1f3; border-radius:9px; text-align:center; font-size:12px; color:#687486; }
+/* ID y especificidad necesarios por los !important de la barra anterior. */
+body #cart-fab.cart-pill-bar,body.role-vendedor #cart-fab.cart-pill-bar {
+  position:fixed!important; bottom:0!important; left:0!important; right:0!important; transform:none!important;
+  width:100%!important; max-width:none!important; border-radius:0!important; background:#fff!important;
+  border-top:1px solid #e9ecf0!important; padding:12px 16px calc(12px + env(safe-area-inset-bottom))!important;
+  box-shadow:0 -5px 24px #18202a08!important; gap:12px!important; z-index:1000!important; animation:none!important;
+}
+#cart-fab .cart-pill-icon-box { display:none!important; }
+#cart-fab .ch-total-caption { color:#586579; font-size:11px; line-height:1.4; }
+#cart-fab .cart-pill-total { color:#172235!important; font-size:18px!important; font-weight:800!important; white-space:normal!important; overflow-wrap:anywhere; }
+#cart-fab .cart-pill-sub { color:#647083!important; font-size:12px!important; white-space:normal!important; }
+#cart-fab .cart-pill-action { border-radius:10px!important; background:#df202b!important; padding:14px 16px!important; min-height:48px; font-size:14px!important; }
+#cart-fab .cart-pill-action:hover { background:#c31624!important; }
+#cart-fab .cart-pill-action:focus-visible { outline:3px solid #2563eb; outline-offset:3px; }
+@media(min-width:760px) {
+  body #cart-fab.cart-pill-bar,body.role-vendedor #cart-fab.cart-pill-bar { padding-left:max(24px,calc((100vw - 1088px)/2))!important; padding-right:max(24px,calc((100vw - 1088px)/2))!important; }
+}
+@media(max-width:350px) {
+  .ch-product { padding:12px; }.ch-quantities { gap:8px; }.ch-quantity { padding:7px 4px 4px; }
+  .ch-prices strong { font-size:15px; }.ch-product h3 { font-size:16px; }
+  #cart-fab .cart-pill-action { padding:12px!important; font-size:13px!important; }
+  #cart-fab .cart-pill-total { font-size:16px!important; }
+}
+@media(prefers-reduced-motion:reduce) { .ch-product,.ch-controls button { transition:none; }.ch-controls button:active { transform:none; } }

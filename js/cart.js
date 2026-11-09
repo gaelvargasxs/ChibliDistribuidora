@@ -1,9 +1,11 @@
+let orderSaveInProgress = false;
 // Estado global asegurado
 if (typeof window.cart === "undefined") window.cart = {};
 if (typeof window.descuentos === "undefined") window.descuentos = {};
 if (typeof window.orders === "undefined") window.orders = [];
 
 function changeQty(productKey, delta) {
+  if (orderSaveInProgress) return;
   const isCaja   = productKey.endsWith("_caja");
   const productId = isCaja ? productKey.replace("_caja", "") : productKey;
   const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
@@ -45,7 +47,10 @@ function changeQty(productKey, delta) {
 function updateCartUI() {
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const totalAmt   = calcTotal();
-  const prodCount  = Object.keys(cart).filter(k => cart[k] > 0).length;
+  const selectedKeys = Object.keys(cart).filter(k => cart[k] > 0);
+  const prodCount = new Set(selectedKeys.map(k => k.endsWith("_caja") ? k.slice(0, -5) : k)).size;
+  const boxes = selectedKeys.filter(k => k.endsWith("_caja")).reduce((n, k) => n + cart[k], 0);
+  const pieces = selectedKeys.filter(k => !k.endsWith("_caja")).reduce((n, k) => n + cart[k], 0);
 
   // Barra flotante estilo Stitch
   const fab = document.getElementById("cart-fab");
@@ -58,7 +63,7 @@ function updateCartUI() {
       if (countEl) countEl.textContent = prodCount;
       const prodsLabel = document.getElementById("cart-fab-prods-label");
       const totalLabel = document.getElementById("cart-fab-total-label");
-      if (prodsLabel) prodsLabel.textContent = `${prodCount} producto${prodCount!==1?"s":""} • ${totalItems} unidad${totalItems!==1?"es":""}`;
+      if (prodsLabel) prodsLabel.textContent = [boxes ? `${boxes} caja${boxes === 1 ? "" : "s"}` : "", pieces ? `${pieces} pieza${pieces === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · ");
       if (totalLabel) totalLabel.textContent = `$${totalAmt.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})} MXN`;
     } else {
       fab.style.setProperty("display", "none", "important");
@@ -68,7 +73,7 @@ function updateCartUI() {
 
   // Header badge & button
   const hTotal = document.getElementById("header-cart-total");
-  if (hTotal) hTotal.textContent = `Carrito: $${totalAmt.toFixed(2)}`;
+  if (hTotal) hTotal.textContent = `Carrito: $${totalAmt.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   const hCounter = document.getElementById("header-cart-counter");
   if (hCounter) hCounter.textContent = totalItems;
   const hBtn = document.getElementById("header-cart-btn");
@@ -86,6 +91,7 @@ function updateCartUI() {
   if (selCountEl) selCountEl.textContent = prodCount > 0 ? `${prodCount} SELECCIONADOS` : "";
 
   renderCart();
+  if (typeof syncCatalogControls === "function") syncCatalogControls();
 }
 
 window.updateCartPillBar = updateCartUI;
@@ -108,6 +114,7 @@ function calcTotal() {
 }
 
 function setDescuento(productId, val) {
+  if (orderSaveInProgress) return;
   const pct = Math.max(0, Math.min(100, parseFloat(val) || 0));
   if (pct === 0) {
     delete descuentos[productId];
@@ -150,61 +157,77 @@ function renderCart() {
 
   let subtotalBruto = 0;
 
-  linesEl.innerHTML = Object.entries(cart).map(([key, qty]) => {
-    const isCaja    = key.endsWith("_caja");
-    const productId = isCaja ? key.replace("_caja", "") : key;
-    const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
-    const p = prodsList.find(pr => pr.id === productId);
+  const expandedDiscounts = new Set(Array.from(linesEl.querySelectorAll("details[open]")).map(el => el.dataset.productId));
+  const prodsList = (window.products && window.products.length) ? window.products : products;
+  const ids = [...new Set(entries.filter(([, qty]) => qty > 0).map(([key]) => key.endsWith("_caja") ? key.slice(0, -5) : key))];
+  const money = value => Number(value).toLocaleString("es-MX", {minimumFractionDigits:2, maximumFractionDigits:2});
+  linesEl.innerHTML = ids.map(id => {
+    const p = prodsList.find(product => product.id === id);
     if (!p) return "";
-    const cajaPiezas = parseInt(p.piezas) || 1;
-    const unitQty    = isCaja ? cajaPiezas * qty : qty;
-    const descPct    = descuentos[productId] || 0;
-    const precioFinal = p.price * (1 - descPct / 100);
-    const subtotal   = precioFinal * unitQty;
-    subtotalBruto += p.price * unitQty;
-
-    const cantidadLabel = isCaja ? `${qty} caja${qty>1?"s":""}` : `${qty} pieza${qty>1?"s":""}`;
-    const precioUnitStr = isCaja && qty > 0 ? ` ($${p.price.toFixed(2)} c/u)` : "";
-    const descuentoStr = descPct > 0 ? `<span class="order-line-desc">−${descPct}% desc. aplicado</span>` : "";
-
-    return `<div class="cart-item-card">
-      <div class="cart-item-top">
-        <span class="cart-item-emoji">${p.emoji||""}</span>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${esc(p.name)}</div>
-          <div class="cart-item-meta">${cajaPiezas>1?`${cajaPiezas} pzas/caja · `:""}${p.unit?esc(p.unit)+" · ":""}$${p.price.toFixed(2)}${precioUnitStr}</div>
-          <div class="cart-item-price">$${subtotal.toFixed(2)} ${descuentoStr}</div>
+    const pack = parseInt(p.piezas) || 1;
+    const boxes = cart[id + "_caja"] || 0;
+    const pieces = cart[id] || 0;
+    const units = boxes * pack + pieces;
+    const price = Number(p.price) || 0;
+    const pct = descuentos[id] || 0;
+    subtotalBruto += price * units;
+    const amount = price * units * (1 - pct / 100);
+    const image = typeof p.image === "string" && /^(https?:\/\/|data:image\/)/i.test(p.image) ? p.image : "";
+    const control = (key, label, qty, step) => `<div class="order-quantity"><span>${label}</span><div class="order-stepper">
+      <button type="button" data-order-key="${esc(key)}" data-delta="-1" aria-label="Quitar ${label.toLowerCase()} de ${esc(p.name)}" ${qty <= 0 ? "disabled" : ""}>−</button>
+      <span>${qty}</span>
+      <button type="button" data-order-key="${esc(key)}" data-delta="1" aria-label="Agregar ${label.toLowerCase()} de ${esc(p.name)}" ${units + step > (Number(p.stock) || 0) ? "disabled" : ""}>+</button>
+    </div></div>`;
+    return `<article class="order-product">
+      <div class="order-product-top">
+        <div class="order-photo"><span aria-hidden="true">${esc(p.emoji || "📦")}</span>${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy">` : ""}</div>
+        <div class="order-product-info"><h3>${esc(p.name)}</h3>
+          <p>${[p.unit ? esc(p.unit) : "", parseInt(p.piezas) > 0 ? `${pack} piezas/caja` : ""].filter(Boolean).join(" · ")}</p>
+          <span class="order-unit-price">$${money(price)} por pieza</span>
         </div>
-        <button class="cart-item-del" onclick="changeQtyInCart('${key}', -${qty})" title="Quitar del pedido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
+        <button type="button" class="order-remove" data-remove-product="${esc(id)}" aria-label="Quitar ${esc(p.name)} del pedido"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
       </div>
-      <div class="cart-item-bottom">
-        <span class="cart-item-qty-label">Cantidad: ${cantidadLabel}</span>
-        <div class="qty-stepper">
-          <button onclick="changeQtyInCart('${key}', -1)">−</button>
-          <span>${qty}</span>
-          <button onclick="changeQtyInCart('${key}', 1)">+</button>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:.35rem;margin-top:.6rem;">
-        <label style="font-size:.7rem;margin:0;color:var(--gray-400);">Desc. individual %</label>
-        <input type="number" class="descuento-input" value="${descPct}" min="0" max="100" step="1"
-               onchange="setDescuento('${productId}', this.value)" title="% de descuento" />
-      </div>
-    </div>`;
+      <div class="order-quantities">${parseInt(p.piezas) > 0 || boxes > 0 ? control(id + "_caja", "Cajas", boxes, pack) : ""}${control(id, "Piezas", pieces, 1)}</div>
+      <div class="order-line-total"><span>Importe${pct > 0 ? ` <small>−${pct}%</small>` : ""}</span><strong>$${money(amount)}</strong></div>
+      <details class="order-discount" data-product-id="${esc(id)}" ${expandedDiscounts.has(id) ? "open" : ""}>
+        <summary>Descuento del producto${pct > 0 ? ` · ${pct}%` : ""}</summary>
+        <label>Porcentaje <input type="number" data-discount-product="${esc(id)}" value="${pct}" min="0" max="100" step="1" inputmode="decimal" aria-label="Descuento porcentual de ${esc(p.name)}"><span>%</span></label>
+      </details>
+    </article>`;
   }).join("");
+  linesEl.onclick = event => {
+    const button = event.target.closest?.("button");
+    if (!button || button.disabled || !linesEl.contains(button)) return;
+    if (button.dataset.orderKey) changeQtyInCart(button.dataset.orderKey, Number(button.dataset.delta));
+    else if (button.dataset.removeProduct) {
+      const id = button.dataset.removeProduct;
+      delete cart[id]; delete cart[id + "_caja"];
+      updateCartUI();
+      if (typeof renderProducts === "function") renderProducts();
+    }
+  };
+  linesEl.onchange = event => {
+    const input = event.target.closest?.("input[data-discount-product]");
+    if (input && linesEl.contains(input)) setDescuento(input.dataset.discountProduct, input.value);
+  };
+  linesEl.querySelectorAll(".order-photo img").forEach(img => img.addEventListener("error", () => img.remove(), {once:true}));
+  const countLabel = document.getElementById("order-product-count");
+  if (countLabel) countLabel.textContent = `${ids.length} producto${ids.length === 1 ? "" : "s"}`;
+  const clearButton = document.getElementById("btn-clear-cart");
+  if (clearButton) clearButton.style.display = "";
 
   const total = calcTotal();
   const totalDescuento = subtotalBruto - total;
 
-  document.getElementById("cart-subtotal-bruto").textContent = `$${subtotalBruto.toFixed(2)}`;
+  document.getElementById("cart-subtotal-bruto").textContent = `$${subtotalBruto.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   const descRow = document.getElementById("cart-descuento-row");
   if (totalDescuento > 0.005) {
     descRow.style.display = "flex";
-    document.getElementById("cart-descuento-total").textContent = `−$${totalDescuento.toFixed(2)}`;
+    document.getElementById("cart-descuento-total").textContent = `−$${totalDescuento.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   } else {
     descRow.style.display = "none";
   }
-  totalEl.textContent = `$${total.toFixed(2)}`;
+  totalEl.textContent = `$${total.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
   renderCheckoutStorePicker();
 }
@@ -217,6 +240,7 @@ function changeQtyInCart(productKey, delta) {
 
 // ── Aplicar el mismo % de descuento a todas las líneas del carrito ──
 function applyGlobalDiscount() {
+  if (orderSaveInProgress) return;
   const val = document.getElementById("global-discount-input").value;
   const pct = Math.max(0, Math.min(100, parseFloat(val) || 0));
   Object.keys(cart).forEach(key => {
@@ -227,7 +251,7 @@ function applyGlobalDiscount() {
 }
 
 // ── PASO 2: Asignar tienda de entrega dentro del carrito ─────────
-function renderCheckoutStorePicker(filter = "") {
+function renderCheckoutStorePicker(filter = document.getElementById("checkout-store-search")?.value || "") {
   const listEl = document.getElementById("checkout-store-list");
   if (!listEl) return;
 
@@ -236,26 +260,25 @@ function renderCheckoutStorePicker(filter = "") {
   const labelEl  = document.getElementById("checkout-total-label");
   const amountEl = document.getElementById("checkout-total-amount");
   if (labelEl)  labelEl.textContent  = `Total (${prodCount} prod${prodCount!==1?"s":""})`;
-  if (amountEl) amountEl.textContent = `$${total.toFixed(2)}`;
+  if (amountEl) amountEl.textContent = `$${total.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
   const f = filter.toLowerCase();
   const filtered = customers.filter(c =>
-    c.storeName.toLowerCase().includes(f) ||
+    (c.storeName || "").toLowerCase().includes(f) ||
     (c.ownerName||"").toLowerCase().includes(f) ||
     (c.zone||"").toLowerCase().includes(f)
   );
 
   if (!filtered.length) {
     listEl.innerHTML = `<div class="empty-state" style="padding:1.2rem 0;">
-      <p>No hay tiendas registradas. Usa "+ Nuevo" para agregar una.</p></div>`;
+      <p>${f ? "No se encontraron tiendas con esa búsqueda." : "No hay tiendas registradas. Usa Registrar tienda para agregar una."}</p></div>`;
     return;
   }
 
   listEl.innerHTML = filtered.map(c => `
-    <div class="store-card-v2 ${c.id === activeCustomerId ? "selected" : ""}"
-         onclick="selectCheckoutCustomer('${c.id}')">
+    <button type="button" class="store-card-v2 ${c.id === activeCustomerId ? "selected" : ""}" data-checkout-store="${esc(c.id)}" aria-pressed="${c.id === activeCustomerId}">
       <div class="store-card-v2-top">
-        <div class="customer-avatar">${c.storeName.charAt(0).toUpperCase()}</div>
+        <div class="customer-avatar">${esc((c.storeName || "T").charAt(0).toUpperCase())}</div>
         <div style="flex:1;min-width:0;">
           <div class="store-card-v2-name">${esc(c.storeName)}</div>
           <div class="store-card-v2-meta">${esc(c.ownerName||"")}${c.zone ? " · Zona: " + esc(c.zone) : ""}${c.address ? " · " + esc(c.address) : ""}</div>
@@ -264,10 +287,15 @@ function renderCheckoutStorePicker(filter = "") {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
       </div>
-    </div>`).join("");
+    </button>`).join("");
+  listEl.onclick = event => {
+    const button = event.target.closest?.("button[data-checkout-store]");
+    if (button && listEl.contains(button)) selectCheckoutCustomer(button.dataset.checkoutStore);
+  };
 }
 
 function selectCheckoutCustomer(id) {
+  if (orderSaveInProgress) return;
   activeCustomerId   = id;
   activeCustomerData = customers.find(c => c.id === id);
   if (!activeCustomerData) return;
@@ -278,6 +306,7 @@ function selectCheckoutCustomer(id) {
 }
 
 function openQuickAddStore() {
+  if (orderSaveInProgress) return;
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay open";
   overlay.innerHTML = `
@@ -348,8 +377,9 @@ async function submitQuickAddStore(btn) {
 }
 
 function clearCart() {
-  cart = {};
-  descuentos = {};
+  if (orderSaveInProgress) return;
+  cart = {}; window.cart = cart;
+  descuentos = {}; window.descuentos = descuentos;
   renderProducts(document.getElementById("product-search").value);
   updateCartUI();
   toast("Carrito limpiado");
@@ -364,15 +394,32 @@ function getHoyStr() {
 // CONFIRMAR PEDIDO
 // ── Aquí se registra el pedido Y se descuenta el stock.
 // ════════════════════════════════════════════════════════════════
-async function confirmOrder() {
-  if (!activeCustomerId) { toast("Asigna una tienda de entrega (Paso 2)"); return; }
-  if (!Object.keys(cart).length) { toast("El carrito está vacío"); return; }
+function showOrderSaveError(message) {
+  const el = document.getElementById("order-save-error");
+  if (el) { el.textContent = message; el.hidden = !message; }
+  if (message) toast(message, 7000);
+}
 
+async function confirmOrder() {
+  if (orderSaveInProgress) return;
+  if (!activeCustomerId || !activeCustomerData) { showOrderSaveError("Selecciona una tienda para el pedido."); return; }
+  if (!Object.keys(cart).length) { updateCartUI(); showOrderSaveError("El carrito está vacío."); return; }
+  if (!window._firebaseReady || !window._db || !window._fsLib) {
+    showOrderSaveError("No hay conexión con Firebase. Conservamos tu pedido; revisa la conexión e intenta de nuevo."); return;
+  }
+  const button = document.getElementById("confirm-order-btn");
+  const previousLabel = button?.innerHTML;
+  orderSaveInProgress = true;
+  showOrderSaveError("");
+  if (button) { button.disabled = true; button.textContent = "Guardando pedido…"; }
+  try {
   const lines = Object.entries(cart).map(([key, qty]) => {
     const isCaja    = key.endsWith("_caja");
     const productId = isCaja ? key.replace("_caja", "") : key;
     const prodsList = (window.products && window.products.length) ? window.products : (typeof products !== "undefined" ? products : []);
     const p = prodsList.find(pr => pr.id === productId);
+    if (!p) throw new Error("Uno de los productos ya no está disponible. Revisa el catálogo.");
+    if (!Number.isInteger(qty) || qty <= 0) throw new Error("Revisa las cantidades del pedido.");
     const cajaPiezas = parseInt(p.piezas) || 1;
     const unitQty    = isCaja ? cajaPiezas * qty : qty;
     const descPct    = descuentos[productId] || 0;
@@ -411,50 +458,62 @@ async function confirmOrder() {
     createdAt: { toDate: () => new Date() }
   };
 
-  // Agregar al array local inmediatamente
-  const localId = "local-" + Date.now();
-  orders.unshift({ id:localId, ...orderData });
 
-  // Descontar stock local
-  lines.forEach(l => {
-    const p = products.find(pr => pr.id === l.productId);
-    if (p) p.stock = Math.max(0, (p.stock||0) - l.qty);
-  });
-
-  // Intentar guardar en Firebase (silencioso si falla/demo)
-  try {
-    const { collection, doc, addDoc, updateDoc, serverTimestamp } = window._fsLib;
     const db = window._db;
-    if (db) {
-      const ref = await addDoc(collection(db,"orders"), {
-        ...orderData, createdAt: serverTimestamp()
+    const orderRef = db.collection("orders").doc();
+    const quantities = new Map();
+    lines.forEach(line => quantities.set(line.productId, (quantities.get(line.productId) || 0) + line.qty));
+    const productRefs = [...quantities.keys()].map(id => db.collection("products").doc(id));
+    // Todas las lecturas preceden a las escrituras. Pedido y stock se guardan juntos.
+    await db.runTransaction(async transaction => {
+      const snapshots = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+      snapshots.forEach((snapshot, index) => {
+        const id = productRefs[index].id;
+        if (!snapshot.exists) throw new Error("Un producto ya no existe. Actualiza el catálogo.");
+        const data = snapshot.data();
+        const stock = Number(data.stock);
+        const line = lines.find(item => item.productId === id);
+        if (!Number.isFinite(stock) || stock < quantities.get(id)) throw new Error(`Stock insuficiente para ${line.name}. Revisa las cantidades.`);
+        if (Number(data.price) !== Number(line.priceLista)) throw new Error(`Cambió el precio de ${line.name}. Actualiza el catálogo antes de confirmar.`);
       });
-      // Reemplazar id local por el de Firebase
-      const idx = orders.findIndex(o => o.id === localId);
-      if (idx >= 0) orders[idx].id = ref.id;
-      // Actualizar stock en Firebase
-      lines.forEach(l => {
-        const p = products.find(pr => pr.id === l.productId);
-        if (p) updateDoc(doc(db,"products",l.productId), { stock: p.stock }).catch(()=>{});
-      });
+      snapshots.forEach((snapshot, index) => transaction.update(productRefs[index], {
+        stock: Number(snapshot.data().stock) - quantities.get(productRefs[index].id)
+      }));
+      transaction.set(orderRef, {...orderData, createdAt: window._fsLib.serverTimestamp()});
+    });
+    // La interfaz se limpia únicamente después de confirmar la escritura.
+    const waText = buildWhatsAppText(lines, total);
+    const confirmedPhone = activeCustomerData.phone;
+    if (!orders.some(order => order.id === orderRef.id)) orders.unshift({id:orderRef.id, ...orderData});
+    window.orders = orders;
+    cart = {}; window.cart = cart;
+    descuentos = {}; window.descuentos = descuentos;
+    activeCustomerId = null; activeCustomerData = null;
+    const nameEl = document.getElementById("active-client-name");
+    if (nameEl) nameEl.textContent = "Ninguno seleccionado";
+    // Las entregas parciales pueden no cargar todos los módulos de administración.
+    for (const name of ["renderProducts", "renderStockList", "renderOrdersAdmin", "renderHistorial", "updateCartUI"]) {
+      try { if (typeof window[name] === "function") window[name](); }
+      catch (uiError) { console.error("Pedido guardado; error al actualizar " + name, uiError); }
     }
-  } catch(e) {}
-
-  const waText = buildWhatsAppText(lines, total);
-  const confirmedPhone = activeCustomerData.phone;
-  cart = {};
-  descuentos = {};
-  activeCustomerId   = null;
-  activeCustomerData = null;
-  const nameEl = document.getElementById("active-client-name");
-  if (nameEl) nameEl.textContent = "Ninguno seleccionado";
-  renderProducts(document.getElementById("product-search").value);
-  renderStockList();
-  renderOrdersAdmin();
-  renderHistorial();
-  updateCartUI();
-  toast("Pedido guardado — continúa con la siguiente tienda");
-  showOrderConfirmedModal(waText, confirmedPhone);
+    toast("Pedido guardado en Firebase");
+    try { showOrderConfirmedModal(waText, confirmedPhone); }
+    catch (uiError) { console.error("Pedido guardado; error al mostrar comprobante", uiError); }
+  } catch (error) {
+    console.error("No se pudo confirmar el pedido:", error);
+    const code = String(error.code || "").replace("firestore/", "");
+    const message = code === "permission-denied"
+      ? "Firebase rechazó el guardado por permisos. Tu pedido sigue aquí. Hay que revisar las reglas y el acceso del vendedor."
+      : code === "unauthenticated"
+      ? "Firebase requiere una sesión válida. Tu pedido se conserva; revisa el acceso del vendedor."
+      : ["unavailable", "deadline-exceeded"].includes(code)
+      ? "No se pudo completar el guardado. Revisa tu conexión; tu pedido se conserva."
+      : (error.message || "No se pudo guardar. Tu pedido se conserva.");
+    showOrderSaveError(message);
+  } finally {
+    orderSaveInProgress = false;
+    if (button) { button.disabled = false; button.innerHTML = previousLabel; }
+  }
 }
 
 function buildWhatsAppText(lines, total) {
@@ -465,9 +524,9 @@ function buildWhatsAppText(lines, total) {
   txt    += `${activeCustomerData.address || "Sin dirección"}\n\n`;
   txt    += `*Detalle del pedido:*\n`;
   lines.forEach(l => {
-    txt += `${l.emoji} ${l.name} × ${l.qty} = $${l.subtotal.toFixed(2)}\n`;
+    txt += `${l.emoji} ${l.name} × ${l.qty} = $${l.subtotal.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
   });
-  txt += `\n*TOTAL: $${total.toFixed(2)}*\n`;
+  txt += `\n*TOTAL: $${total.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}*\n`;
   return txt;
 }
 

@@ -28,7 +28,7 @@ function renderCatChips() {
     <button class="cat-chip ${activeCategory === "" ? "active" : ""}" onclick="selectCat('')">Todos</button>
     ${chips.map(c => `
       <button class="cat-chip ${activeCategory === c.id ? "active" : ""}" onclick="selectCat('${c.id}')">
-        ${c.emoji} ${c.id}
+        ${c.id}
       </button>`).join("")}`;
 }
 
@@ -38,9 +38,15 @@ function selectCat(cat) {
   renderProducts(document.getElementById("product-search")?.value || "");
 }
 
-function renderProducts(filter = "") {
+function renderProducts(filter = document.getElementById("product-search")?.value || "") {
   const grid = document.getElementById("product-grid");
   if (!grid) return;
+  // Delegación: funciona también cuando se vuelven a crear las tarjetas al filtrar.
+  grid.onclick = event => {
+    const button = event.target.closest?.("button[data-product-key]");
+    if (!button || button.disabled || !grid.contains(button)) return;
+    changeQty(button.dataset.productKey, Number(button.dataset.delta));
+  };
   const f = filter.toLowerCase();
 
   const filtered = products.filter(p => {
@@ -58,8 +64,8 @@ function renderProducts(filter = "") {
   // Contador
   const countEl   = document.getElementById("catalogo-count-label");
   const selCountEl = document.getElementById("catalogo-sel-count");
-  const cartItems = Object.values(cart).filter(v => v > 0).length;
-  if (countEl) countEl.textContent = `CATÁLOGO MAYORISTA (${filtered.length} PRODUCTOS)`;
+  const cartItems = new Set(Object.keys(cart).filter(k => cart[k] > 0).map(k => k.endsWith("_caja") ? k.slice(0, -5) : k)).size;
+  if (countEl) countEl.textContent = `${filtered.length} producto${filtered.length === 1 ? "" : "s"}`;
   if (selCountEl) selCountEl.textContent = cartItems > 0 ? `${cartItems} SELECCIONADOS` : "";
 
   if (!filtered.length) {
@@ -70,99 +76,74 @@ function renderProducts(filter = "") {
   }
 
   grid.innerHTML = filtered.map(p => {
-    const cajaPiezas = parseInt(p.piezas) || 12;
-    const cajaQty    = cart[p.id + "_caja"] || 0;
-    const piezaQty   = cart[p.id] || 0;
-    const anyInCart  = cajaQty > 0 || piezaQty > 0;
-
-    // Precios: caja completa vs pieza suelta
-    const precioPieza = +p.price || 0;
-    const precioCaja  = +(p.precioCaja || (precioPieza * cajaPiezas * 0.95));
-    const precioUnitEnCaja = precioCaja / cajaPiezas;
-
-    // Stock como siempre
-    const stockTotal = Number(p.stock) || 0;
-    const stockBadgeClass = stockTotal > 5 ? "stock-badge-ok" : stockTotal > 0 ? "stock-badge-low" : "stock-badge-out";
-    const stockTxt = stockTotal > 0 ? `${stockTotal} disp.` : "Agotado";
-
-    // SKU formateado como el diseño
-    const rawSku = p.codigo || (p.id.length > 7 ? p.id.slice(0,7).toUpperCase() : p.id.toUpperCase());
-    const skuCode = rawSku.includes("-") ? rawSku : `SKU:  ${rawSku}`;
-
-    // Imagen / thumbnail
-    const isHttpImg = p.image && (p.image.startsWith("http://") || p.image.startsWith("https://") || p.image.startsWith("data:"));
-    const boxIconHtml = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;">📦</div>`;
-    const imgMarkup = isHttpImg
-      ? `<img src="${p.image}" alt="${esc(p.name)}" class="b2b-card-img" onerror="this.outerHTML='${boxIconHtml}'" />`
-      : boxIconHtml;
-
-    return `
-    <div class="b2b-product-card ${anyInCart ? "in-cart" : ""}" id="pcard-${p.id}">
-      <!-- Fila Superior -->
-      <div class="b2b-card-top">
-        <div class="b2b-card-img-wrap">
-                    ${imgMarkup}
+    const cajaPiezas = parseInt(p.piezas) || 0;
+    const cajaQty = cart[p.id + "_caja"] || 0;
+    const piezaQty = cart[p.id] || 0;
+    const stock = Number(p.stock) || 0;
+    // Misma base de precio que calcTotal(); no inventar descuentos por caja.
+    const precio = Number(p.price) || 0;
+    const money = value => value.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    const image = typeof p.image === "string" && /^(https?:\/\/|data:image\/)/i.test(p.image) ? p.image : "";
+    const stepper = (key, label, qty, kind) => `
+      <div class="ch-quantity ${kind}-stepper ${qty > 0 ? "active" : ""}">
+        <span class="ch-quantity-label">${label}</span>
+        <div class="ch-controls">
+          <button type="button" data-product-key="${esc(key)}" data-delta="-1" aria-label="Quitar ${label.toLowerCase()} de ${esc(p.name)}">−</button>
+          <span id="qty-${esc(key)}" aria-live="polite">${qty}</span>
+          <button type="button" class="ch-add" data-product-key="${esc(key)}" data-delta="1" aria-label="Agregar ${label.toLowerCase()} de ${esc(p.name)}">+</button>
         </div>
-        <div class="b2b-card-header-info">
-          <div class="b2b-card-title-row">
-            <h3 class="b2b-card-title">${esc(p.name)}</h3>
-            <span class="b2b-stock-badge ${stockBadgeClass}">
-              <span class="b2b-stock-dot"></span>
-              ${stockTxt}
-            </span>
+      </div>`;
+    return `<article class="ch-product ${stock <= 0 ? "is-out" : ""} ${cajaQty || piezaQty ? "in-cart" : ""}" id="pcard-${esc(p.id)}">
+          <div class="ch-product-meta">
+          ${p.category ? `<span class="ch-category">${esc(p.category)}</span>` : ""}
+            <span class="ch-stock ${stock <= 0 ? "out" : ""}">${stock > 0 ? `${stock} disp.` : "Agotado"}</span>
           </div>
-          <div class="b2b-card-sub">Caja ${cajaPiezas} × ${esc(p.unit || "500ml")}</div>
-          <div class="b2b-tags-row">
-            <span class="b2b-tag-cat">${esc((p.category || "BÁSICOS").toUpperCase())}</span>
-            ${p.prioritario ? '<span class="b2b-tag-priority">⚡ Prioridad</span>' : ''}
-          </div>
+      <div class="ch-product-head">
+        <div class="ch-image">
+          <span aria-hidden="true">${esc(p.emoji || "📦")}</span>
+          ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy" decoding="async">` : ""}
+        </div>
+        <div class="ch-product-info">
+          <h3>${esc(p.name)}</h3>
+          ${p.unit ? `<p class="ch-unit">Presentación: ${esc(p.unit)}</p>` : ""}
         </div>
       </div>
-
-      <!-- Contenedor Doble Precio -->
-      <div class="b2b-pricing-box">
-        <div class="b2b-price-col">
-          <div class="b2b-price-label">Por Caja (${cajaPiezas} pzas)</div>
-          <div class="b2b-price-main">
-            $${precioCaja.toFixed(2)}
-            <span class="b2b-price-unit">($${precioUnitEnCaja.toFixed(2)} c/u)</span>
-          </div>
-        </div>
-        <div class="b2b-price-divider"></div>
-        <div class="b2b-price-col right">
-          <div class="b2b-price-label">Pieza Suelta</div>
-          <div class="b2b-price-main">
-            $${precioPieza.toFixed(2)} <span class="b2b-currency">MXN</span>
-          </div>
-        </div>
+      <div class="ch-prices ${cajaPiezas > 0 ? "" : "single"}">
+        ${cajaPiezas > 0 ? `<div><span>Caja · ${cajaPiezas} piezas</span><strong>$${money(precio * cajaPiezas)}</strong></div>` : ""}
+        <div><span>Por pieza</span><strong>$${money(precio)}</strong></div>
       </div>
-
-      <!-- Doble Stepper (Cajas & Piezas) -->
-      <div class="b2b-stepper-row">
-        <!-- Stepper Cajas -->
-        <div class="b2b-stepper-box caja-stepper ${cajaQty > 0 ? "active" : ""}">
-          <span class="b2b-stepper-lbl">Cajas</span>
-          <div class="b2b-stepper-controls">
-            <button class="b2b-btn-minus" onclick="changeQty('${p.id}_caja', -1)" aria-label="Menos cajas">−</button>
-            <span class="b2b-qty-val" id="qty-${p.id}_caja">${cajaQty}</span>
-            <button class="b2b-btn-plus plus-caja" onclick="changeQty('${p.id}_caja', 1)" aria-label="Más cajas">+</button>
-          </div>
-        </div>
-
-        <!-- Stepper Piezas -->
-        <div class="b2b-stepper-box pieza-stepper ${piezaQty > 0 ? "active" : ""}">
-          <span class="b2b-stepper-lbl">Piezas</span>
-          <div class="b2b-stepper-controls">
-            <button class="b2b-btn-minus" onclick="changeQty('${p.id}', -1)" aria-label="Menos piezas">−</button>
-            <span class="b2b-qty-val" id="qty-${p.id}">${piezaQty}</span>
-            <button class="b2b-btn-plus plus-pieza" onclick="changeQty('${p.id}', 1)" aria-label="Más piezas">+</button>
-          </div>
-        </div>
+      ${stock <= 0 ? '<p class="ch-out-message">Sin existencias disponibles</p>' : ""}
+      <div class="ch-quantities ${cajaPiezas > 0 ? "" : "single"}" ${stock <= 0 && !cajaQty && !piezaQty ? 'hidden' : ''}>
+        ${cajaPiezas > 0 ? stepper(p.id + "_caja", "Cajas", cajaQty, "caja") : ""}
+        ${stepper(p.id, "Piezas", piezaQty, "pieza")}
       </div>
-    </div>`;
+    </article>`;
   }).join("");
+  syncCatalogControls();
+  grid.querySelectorAll(".ch-image img").forEach(img => {
+    img.addEventListener("error", () => img.remove(), { once: true });
+  });
 }
 
 function filterProducts() {
   renderProducts(document.getElementById("product-search")?.value || "");
+}
+
+// Sin volver a dibujar la tarjeta, conserva el foco al usar los controles.
+function syncCatalogControls() {
+  const grid = document.getElementById("product-grid");
+  if (!grid) return;
+  const byId = new Map(products.map(p => [p.id, p]));
+  grid.querySelectorAll("button[data-product-key]").forEach(button => {
+    const key = button.dataset.productKey;
+    const isBox = key.endsWith("_caja");
+    const id = isBox ? key.slice(0, -5) : key;
+    const p = byId.get(id);
+    if (!p) { button.disabled = true; return; }
+    const pack = parseInt(p.piezas) || 0;
+    const selected = (cart[id] || 0) + (cart[id + "_caja"] || 0) * pack;
+    button.disabled = Number(button.dataset.delta) < 0
+      ? !(cart[key] > 0)
+      : (isBox && pack <= 0) || selected + (isBox ? pack : 1) > (Number(p.stock) || 0);
+  });
 }

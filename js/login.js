@@ -1,34 +1,42 @@
 // ════════════════════════════════════════════════════════════════
+// AUTENTICACIÓN GOOGLE SIGN-IN — VENDEDORES Y ADMINISTRADORES
+// ════════════════════════════════════════════════════════════════
 let currentSession = null;
+let _loginInProgress = false;
+
+const ADMIN_WHITELIST = [
+  "nel0407gael@gmail.com",
+  "admin@chibli.com"
+];
+
+const VENDEDOR_INACTIVITY_MS = 8 * 60 * 60 * 1000; // 8 horas para vendedores en ruta
+const ADMIN_INACTIVITY_MS    = 10 * 60 * 1000;     // 10 minutos para administradores
+
+const STORAGE_LAST_ACTIVITY  = "chibli_last_activity";
+const STORAGE_ACTIVE_ROLE    = "chibli_active_role";
+const STORAGE_REDIRECT_ROLE  = "chibli_redirect_role";
 
 function setLoginRole(role) {
   const isVend = role === "vendedor";
-  document.getElementById("toggle-vendedor").classList.toggle("active", isVend);
-  document.getElementById("toggle-admin").classList.toggle("active",   !isVend);
-
-  // Vendedor usa código y contraseña; Admin entra EXCLUSIVAMENTE con Google Sign-In
-  document.getElementById("login-vendedor-wrap").style.display = isVend ? "" : "none";
-  
-  const pwdWrap = document.getElementById("login-password-wrap");
-  if (pwdWrap) pwdWrap.style.display = isVend ? "" : "none";
-
-  const btnLogin = document.querySelector(".btn-login");
-  if (btnLogin) btnLogin.style.display = isVend ? "" : "none";
-
-  const googleWrap = document.getElementById("login-google-wrap");
-  if (googleWrap) googleWrap.style.display = !isVend ? "" : "none";
+  document.getElementById("toggle-vendedor")?.classList.toggle("active", isVend);
+  document.getElementById("toggle-admin")?.classList.toggle("active",   !isVend);
 
   const titleEl = document.getElementById("login-title");
   const subEl   = document.getElementById("login-sub");
+  const noteEl  = document.getElementById("login-google-note");
   if (!isVend) {
-    titleEl.textContent = "Acceso Administrador";
-    subEl.innerHTML     = "Inicia sesión con tu <span>cuenta autorizada de Google</span>.";
+    if (titleEl) titleEl.textContent = "Acceso Administrador";
+    if (subEl)   subEl.innerHTML     = "Inicia sesión con tu <span>cuenta autorizada de Google</span>.";
+    if (noteEl)  noteEl.textContent  = "Acceso exclusivo para cuentas administrativas autorizadas.";
   } else {
-    titleEl.textContent = "Ingreso de Vendedor";
-    subEl.innerHTML     = "Ingresa con tu <span>código de vendedor</span> y contraseña.";
+    if (titleEl) titleEl.textContent = "Ingreso de Vendedor";
+    if (subEl)   subEl.innerHTML     = "Inicia sesión con tu <span>correo Gmail registrado</span> por el administrador.";
+    if (noteEl)  noteEl.textContent  = "Usa Chrome o Safari directamente (no el visor interno de WhatsApp).";
   }
 
-  document.getElementById("login-role-value").value = role;
+  const roleInput = document.getElementById("login-role-value");
+  if (roleInput) roleInput.value = role;
+
   const errEl = document.getElementById("login-error");
   if (errEl) {
     errEl.classList.remove("show");
@@ -38,295 +46,125 @@ function setLoginRole(role) {
   }
 }
 
-function toggleLoginPwd(btn) {
-  const inp = document.getElementById("login-password");
-  const isText = inp.type === "text";
-  inp.type = isText ? "password" : "text";
-  btn.innerHTML = isText
-    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
-    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
-}
-
-function onLoginRoleChange() {
-  // Legacy stub — now handled by setLoginRole
-}
-
-
-let _loginVendDropdownIdx = -1;
-
-function populateLoginVendedores() {
-  // La lista se filtra dinámicamente al escribir
-}
-
-function filterLoginVendedores() {
-  const query = (document.getElementById("login-vendedor-input").value || "").toLowerCase().trim();
-  const dropdown = document.getElementById("login-vendedor-dropdown");
-  const matchEl  = document.getElementById("login-vendedor-match");
-  const hiddenId = document.getElementById("login-vendedor-id");
-  _loginVendDropdownIdx = -1;
-  hiddenId.value = "";
-  matchEl.textContent = "";
-
-  if (!query || query.includes("@")) { dropdown.style.display = "none"; return; }
-
-  const matches = vendedores.filter(v =>
-    (v.folio || "").toLowerCase().includes(query) ||
-    (v.nombre || "").toLowerCase().includes(query)
-  );
-
-  if (!matches.length) {
-    dropdown.style.display = "none";
-    return;
-  }
-
-  dropdown.style.display = "block";
-  dropdown.innerHTML = matches.map((v, i) => {
-    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
-    const highlightedFolio  = (v.folio||"").replace(re, '<strong style="color:#C8102E">$1</strong>');
-    const highlightedNombre = (v.nombre||"").replace(re, '<strong style="color:#C8102E">$1</strong>');
-    return `<div class="login-dd-item" data-id="${v.id}" data-folio="${(v.folio||"").replace(/"/g,'&quot;')}"
-              style="padding:.6rem .9rem;cursor:pointer;font-size:.85rem;color:#111827;
-                     border-bottom:1px solid #F3F4F6;"
-              onmousedown="selectLoginVendedor('${v.id}','${(v.folio||"").replace(/'/g,"\\'")}')"
-              onmouseover="highlightDDItem(this)">
-              ${highlightedFolio} — ${highlightedNombre}
-           </div>`;
-  }).join("");
-}
-
-function highlightDDItem(el) {
-  document.querySelectorAll(".login-dd-item").forEach(i => i.style.background = "");
-  el.style.background = "#FEF2F2";
-}
-
-function selectLoginVendedor(id, folio) {
-  document.getElementById("login-vendedor-input").value = folio;
-  document.getElementById("login-vendedor-id").value    = id;
-  document.getElementById("login-vendedor-dropdown").style.display = "none";
-  const matchEl = document.getElementById("login-vendedor-match");
-  matchEl.textContent = "✓ Vendedor encontrado";
-  matchEl.style.color = "#16A34A";
-}
-
-document.addEventListener("click", e => {
-  const wrap = document.getElementById("login-vendedor-wrap");
-  const dd   = document.getElementById("login-vendedor-dropdown");
-  if (dd && wrap && !wrap.contains(e.target)) dd.style.display = "none";
-});
-
-function loginVendedorKeydown(e) {
-  const dropdown = document.getElementById("login-vendedor-dropdown");
-  const items = [...dropdown.querySelectorAll(".login-dd-item")];
-  if (!items.length) { if (e.key === "Enter") doLogin(); return; }
-  if (e.key === "ArrowDown") {
-    e.preventDefault();
-    _loginVendDropdownIdx = Math.min(_loginVendDropdownIdx + 1, items.length - 1);
-    items.forEach((it, i) => it.style.background = i === _loginVendDropdownIdx ? "rgba(255,255,255,.15)" : "");
-  } else if (e.key === "ArrowUp") {
-    e.preventDefault();
-    _loginVendDropdownIdx = Math.max(_loginVendDropdownIdx - 1, 0);
-    items.forEach((it, i) => it.style.background = i === _loginVendDropdownIdx ? "rgba(255,255,255,.15)" : "");
-  } else if (e.key === "Enter") {
-    e.preventDefault();
-    if (_loginVendDropdownIdx >= 0 && items[_loginVendDropdownIdx]) {
-      const it = items[_loginVendDropdownIdx];
-      selectLoginVendedor(it.dataset.id, it.dataset.folio);
-    } else {
-      doLogin();
-    }
-  } else if (e.key === "Escape") {
-    dropdown.style.display = "none";
-  }
-}
-
-async function doLogin() {
-  const role  = document.getElementById("login-role-value")?.value || "vendedor";
-  const pass  = document.getElementById("login-password").value.trim();
+function showLoginError(msg) {
   const errEl = document.getElementById("login-error");
-  errEl.classList.remove("show");
+  if (!errEl) return;
   errEl.style.background = "";
   errEl.style.color = "";
   errEl.style.borderColor = "";
-  errEl.textContent = "Usuario o contraseña incorrectos";
+  errEl.textContent = msg;
+  errEl.classList.add("show");
+}
 
-  if (!pass) {
-    errEl.textContent = "Escribe tu contraseña";
-    errEl.classList.add("show"); return;
+function setGoogleBtnBusy(busy, labelText) {
+  const btn = document.getElementById("btn-google-signin");
+  if (!btn) return;
+  btn.disabled = !!busy;
+  const span = btn.querySelector("span");
+  if (span) span.textContent = labelText || "Continuar con Google";
+}
+
+async function resolveAuthorizedUser(user, preferredRole) {
+  if (!user || !user.email) {
+    throw new Error("No se recibió el correo de tu cuenta de Google.");
   }
 
-  const authMsg = (e, email) => {
-    if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" || e.code === "auth/invalid-login-credentials") return "Contraseña incorrecta";
-    if (e.code === "auth/user-not-found") return "El usuario " + email + " no existe en Firebase Auth";
-    if (e.code === "auth/too-many-requests") return "Demasiados intentos, espera un momento";
-    if (e.code === "auth/operation-not-supported-in-this-environment") return "Abre la página desde un servidor web (HTTPS o http://localhost), no con doble clic al archivo.";
-    if (e.code === "auth/operation-not-allowed") return "Activa Email/Password en Firebase Authentication";
-    if (e.code === "auth/unauthorized-domain") return "Dominio no autorizado en Firebase Authentication";
-    return "Error de acceso (" + (e.code || e.message) + ")";
-  };
+  const email = user.email.toLowerCase().trim();
+  if (user.emailVerified === false) {
+    throw new Error("Tu correo de Google debe estar verificado para continuar.");
+  }
 
-  const authInstance = window._auth || (window.firebase && typeof firebase.auth === "function" ? firebase.auth() : null);
-
-  // ── ADMINISTRADOR: PIN Maestro (1234) o Firebase Auth ──────
-  if (role === "admin") {
-    const validPins = ["1234", "admin", "admin123", "chibli2025"];
-    if (validPins.includes(pass)) {
-      currentSession = {
-        role: "admin",
-        adminEmail: "admin@chibli.com",
-        adminName: "Nelson Gael (Admin)"
-      };
-      adminUnlocked  = true;
-      applySession();
-      return;
+  // Modo Administrador
+  if (preferredRole === "admin") {
+    if (!ADMIN_WHITELIST.includes(email)) {
+      throw new Error("Acceso denegado: la cuenta " + email + " no está autorizada como Administrador.");
     }
+    return {
+      role: "admin",
+      adminEmail: email,
+      adminName: user.displayName || "Administrador"
+    };
+  }
 
-    const email = "admin@chibli.com";
-    if (authInstance) {
-      try {
-        await authInstance.signInWithEmailAndPassword(email, pass);
-        currentSession = { role: "admin", adminEmail: email, adminName: "Nelson Gael (Admin)" };
-        adminUnlocked  = true;
-        applySession();
-        return;
-      } catch (e) {
-        console.warn("Auth check error:", e);
-      }
+  // Modo Vendedor: consulta exclusivamente su propio documento vendedores/{email}
+  if (!window._db || !window._firebaseReady) {
+    throw new Error("Sin conexión con Firebase para verificar tu acceso.");
+  }
+
+  let vendSnap;
+  try {
+    vendSnap = await window._db.collection("vendedores").doc(email).get();
+  } catch (err) {
+    if (err?.code === "permission-denied" && ADMIN_WHITELIST.includes(email)) {
+      throw new Error("Tu cuenta es de Administrador. Cambia a la pestaña «Administrador» arriba para entrar.");
     }
-    
-    errEl.textContent = "PIN incorrecto. Ingresa con el PIN de Administrador: 1234";
-    errEl.classList.add("show");
-    return;
+    throw err;
   }
 
-  // ── VENDEDOR ───────────────────────────────────────────────
-  const vendId    = document.getElementById("login-vendedor-id").value;
-  const inputRaw  = (document.getElementById("login-vendedor-input").value || "").trim();
-  const inputText = inputRaw.toLowerCase();
-  const esCorreo  = inputText.includes("@");
-
-  if (!inputText) {
-    errEl.style.background = "";
-    errEl.style.color = "";
-    errEl.style.borderColor = "";
-    errEl.textContent = "Escribe tu folio o correo de vendedor";
-    errEl.classList.add("show"); return;
-  }
-
-  if (inputText === "admin@chibli.com" || inputText === "admin") {
-    errEl.style.background = "";
-    errEl.style.color = "";
-    errEl.style.borderColor = "";
-    errEl.textContent = "Esa cuenta es de Administrador. Selecciona la pestaña Administrador.";
-    errEl.classList.add("show"); return;
-  }
-
-  // Número de un correo tipo "vendedor1@chibli.com" -> 1
-  const numCorreo = esCorreo ? ((inputText.split("@")[0].match(/(\d+)$/) || [])[1] || null) : null;
-  const numFolio  = v => ((v.folio || "").match(/(\d+)$/) || [])[1];
-
-  let vendedor = vendedores.find(v => v.id === vendId);
-  if (!vendedor && esCorreo) {
-    vendedor = vendedores.find(v => (v.email || "").toLowerCase() === inputText) ||
-               (numCorreo && vendedores.find(v => parseInt(numFolio(v)) === parseInt(numCorreo)));
-  }
-  if (!vendedor && !esCorreo) {
-    vendedor = vendedores.find(v =>
-      (v.folio  || "").toLowerCase() === inputText ||
-      (v.nombre || "").toLowerCase() === inputText ||
-      (v.folio  || "").toLowerCase().includes(inputText) ||
-      (v.nombre || "").toLowerCase().includes(inputText)
-    );
-  }
-
-  if (!vendedor && !esCorreo) {
-    errEl.style.background = "";
-    errEl.style.color = "";
-    errEl.style.borderColor = "";
-    errEl.textContent = vendedores.length === 0
-      ? "No hay vendedores registrados. Entra como Admin primero."
-      : "Vendedor no encontrado. Verifica tu folio.";
-    errEl.classList.add("show"); return;
-  }
-
-  // Correos candidatos en Firebase Auth
-  const candidatos = [];
-  if (esCorreo) candidatos.push(inputText);
-  if (vendedor) {
-    if (vendedor.email) candidatos.push(vendedor.email.toLowerCase());
-    const n = parseInt(numFolio(vendedor));
-    if (n) candidatos.push("vendedor" + n + "@chibli.com");
-    candidatos.push(vendedor.id.toLowerCase() + "@chibli.com");
-  }
-
-  let autenticado = false;
-  let ultimoError = null;
-  if (authInstance) {
-    for (const email of [...new Set(candidatos)]) {
-      try {
-        await authInstance.signInWithEmailAndPassword(email, pass);
-        autenticado = true;
-        break;
-      } catch (e) {
-        ultimoError = e;
-        if (e.code === "auth/network-request-failed" || e.code === "auth/too-many-requests") break;
-      }
+  if (vendSnap.exists) {
+    const data = vendSnap.data() || {};
+    if (data.activo === false) {
+      throw new Error("Tu acceso de vendedor (" + (data.folio || email) + ") está desactivado.");
     }
+    return {
+      role: "vendedor",
+      vendedorId: vendSnap.id,
+      vendedorEmail: email,
+      vendedorFolio: data.folio || "VEN-001",
+      vendedorNombre: data.nombre || user.displayName || "Vendedor"
+    };
   }
 
-  // Respaldo: contraseña guardada en Firestore (vendedores sin cuenta en Auth)
-  if (!autenticado && vendedor && vendedor.password && pass === vendedor.password) {
-    autenticado = true;
+  if (ADMIN_WHITELIST.includes(email)) {
+    throw new Error("Tu cuenta es de Administrador. Cambia a la pestaña «Administrador» arriba (o regístrate en Vendedores para operar en ruta).");
   }
 
-  if (!autenticado) {
-    errEl.style.background = "";
-    errEl.style.color = "";
-    errEl.style.borderColor = "";
-    errEl.textContent = ultimoError ? authMsg(ultimoError, candidatos[0] || "") : "Contraseña incorrecta";
-    errEl.classList.add("show"); return;
-  }
-
-  if (!vendedor) {
-    // Cuenta de Auth sin registro en la colección vendedores
-    vendedor = { id: inputText, folio: inputText.split("@")[0].toUpperCase(), nombre: inputText.split("@")[0] };
-  }
-
-  currentSession = { role: "vendedor", vendedorId: vendedor.id, vendedorFolio: vendedor.folio, vendedorNombre: vendedor.nombre };
-  applySession();
+  throw new Error("Acceso denegado: el correo " + email + " no está registrado como vendedor autorizado.");
 }
 
 // ═══ SESIÓN ═══
 function applySession() {
   if (!currentSession) return;
-  try { sessionStorage.setItem("chibli_session", JSON.stringify(currentSession)); } catch(e) {}
-  document.getElementById("login-password").value = "";
-  const errEl = document.getElementById("login-error");
-  errEl.classList.remove("show");
-  errEl.style.background = "";
-  errEl.style.color = "";
-  errEl.style.borderColor = "";
+  try {
+    localStorage.setItem(STORAGE_ACTIVE_ROLE, currentSession.role);
+    localStorage.setItem(STORAGE_LAST_ACTIVITY, String(Date.now()));
+  } catch (e) {}
 
-  // ── ENTREGA 4: PANTALLA DEL VENDEDOR (CATÁLOGO, CARRITO Y PEDIDO) ──
+  const errEl = document.getElementById("login-error");
+  if (errEl) {
+    errEl.classList.remove("show");
+    errEl.style.background = "";
+    errEl.style.color = "";
+    errEl.style.borderColor = "";
+  }
+
+  if (typeof startAppDataSync === "function") {
+    startAppDataSync(currentSession);
+  }
+
+  // ── PANTALLA DEL VENDEDOR (CATÁLOGO, CARRITO Y PEDIDO) ──
   if (currentSession.role === "vendedor") {
-    document.getElementById("login-screen").classList.add("hidden");
+    document.getElementById("login-screen")?.classList.add("hidden");
     document.body.classList.add("role-vendedor");
     document.body.classList.remove("role-admin");
-    document.getElementById("app-header").style.display = "";
-    document.getElementById("session-label").textContent = currentSession.vendedorNombre || "Vendedor";
-    document.getElementById("header-menu-sub").textContent = currentSession.vendedorFolio || "VEN-001";
+    const header = document.getElementById("app-header");
+    if (header) header.style.display = "";
+    const sessLbl = document.getElementById("session-label");
+    if (sessLbl) sessLbl.textContent = currentSession.vendedorNombre || "Vendedor";
+    const menuSub = document.getElementById("header-menu-sub");
+    if (menuSub) menuSub.textContent = currentSession.vendedorFolio || currentSession.vendedorEmail || "";
 
-    // Drawer adaptable al rol
     const dAvatar = document.getElementById("drawer-user-avatar");
-    const dName = document.getElementById("drawer-user-name");
-    const dFolio = document.getElementById("drawer-user-folio");
+    const dName   = document.getElementById("drawer-user-name");
+    const dFolio  = document.getElementById("drawer-user-folio");
     if (dAvatar) dAvatar.textContent = "VEN";
-    if (dName) dName.textContent = currentSession.vendedorNombre || "Vendedor";
-    if (dFolio) dFolio.textContent = "Folio: " + (currentSession.vendedorFolio || "VEN-001");
+    if (dName)   dName.textContent   = currentSession.vendedorNombre || "Vendedor";
+    if (dFolio)  dFolio.textContent  = "Folio: " + (currentSession.vendedorFolio || "VEN-001");
 
     const gVend = document.getElementById("drawer-group-vendedor");
-    const gAdm = document.getElementById("drawer-group-admin");
+    const gAdm  = document.getElementById("drawer-group-admin");
     if (gVend) gVend.style.display = "block";
-    if (gAdm) gAdm.style.display = "none";
+    if (gAdm)  gAdm.style.display  = "none";
 
     const hCartBtn = document.getElementById("header-cart-btn");
     if (hCartBtn) hCartBtn.style.display = "inline-flex";
@@ -338,26 +176,30 @@ function applySession() {
   }
 
   // ── ADMINISTRADOR: ENTRA AL PANEL CENTRAL ──
-  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("login-screen")?.classList.add("hidden");
   document.body.classList.add("role-admin");
   document.body.classList.remove("role-vendedor");
-  document.getElementById("app-header").style.display = "";
-  document.getElementById("tab-bar").style.display = "";
-  document.getElementById("session-label").textContent = currentSession.adminName || "Administrador";
-  document.getElementById("header-menu-sub").textContent = currentSession.adminEmail || "admin@chibli.com";
+  const header = document.getElementById("app-header");
+  const tabBar = document.getElementById("tab-bar");
+  if (header) header.style.display = "";
+  if (tabBar) tabBar.style.display = "";
 
-  // Drawer adaptable a Administrador
+  const sessLbl = document.getElementById("session-label");
+  if (sessLbl) sessLbl.textContent = currentSession.adminName || "Administrador";
+  const menuSub = document.getElementById("header-menu-sub");
+  if (menuSub) menuSub.textContent = currentSession.adminEmail || "";
+
   const dAvatar = document.getElementById("drawer-user-avatar");
-  const dName = document.getElementById("drawer-user-name");
-  const dFolio = document.getElementById("drawer-user-folio");
+  const dName   = document.getElementById("drawer-user-name");
+  const dFolio  = document.getElementById("drawer-user-folio");
   if (dAvatar) dAvatar.textContent = "ADM";
-  if (dName) dName.textContent = currentSession.adminName || "Nelson Gael (Admin)";
-  if (dFolio) dFolio.textContent = currentSession.adminEmail || "admin@chibli.com";
+  if (dName)   dName.textContent   = currentSession.adminName || "Administrador";
+  if (dFolio)  dFolio.textContent  = currentSession.adminEmail || "";
 
   const gVend = document.getElementById("drawer-group-vendedor");
-  const gAdm = document.getElementById("drawer-group-admin");
+  const gAdm  = document.getElementById("drawer-group-admin");
   if (gVend) gVend.style.display = "none";
-  if (gAdm) gAdm.style.display = "block";
+  if (gAdm)  gAdm.style.display  = "block";
 
   const hCartBtn = document.getElementById("header-cart-btn");
   if (hCartBtn) hCartBtn.style.display = "none";
@@ -369,95 +211,144 @@ function applySession() {
 
 function doLogout() {
   stopInactivityTimer();
-  try { sessionStorage.removeItem("chibli_session"); } catch(e) {}
+  try {
+    sessionStorage.removeItem("chibli_session");
+    localStorage.removeItem(STORAGE_LAST_ACTIVITY);
+    localStorage.removeItem(STORAGE_ACTIVE_ROLE);
+    localStorage.removeItem(STORAGE_REDIRECT_ROLE);
+  } catch (e) {}
+
+  if (typeof stopAppDataSync === "function") stopAppDataSync();
   if (window._auth) window._auth.signOut().catch(() => {});
   currentSession = null;
   adminUnlocked = false;
   closeHeaderMenu();
   if (typeof closeAddProductView === "function") closeAddProductView();
   document.body.classList.remove("role-admin", "role-vendedor");
-  document.getElementById("app-header").style.display = "none";
-  document.getElementById("tab-bar").style.display = "none";
-  ["view-inventario", "view-comercios", "view-admin"].forEach(id => {
+
+  const header = document.getElementById("app-header");
+  const tabBar = document.getElementById("tab-bar");
+  if (header) header.style.display = "none";
+  if (tabBar) tabBar.style.display = "none";
+
+  const fab = document.getElementById("cart-fab");
+  if (fab) { fab.style.setProperty("display", "none", "important"); fab.classList.remove("visible"); }
+
+  ["view-inventario", "view-comercios", "view-admin", "view-caja", "view-catalogo", "view-pedido", "view-historial"].forEach(id => {
     document.getElementById(id)?.classList.remove("active");
   });
-  document.getElementById("login-screen").classList.remove("hidden");
-  document.getElementById("login-password").value = "";
-  setLoginRole("vendedor");
+  document.getElementById("login-screen")?.classList.remove("hidden");
+  setGoogleBtnBusy(false);
+  setLoginRole(document.getElementById("login-role-value")?.value || "vendedor");
 }
 
-
 // ════════════════════════════════════════════════════════════════
-// GOOGLE SIGN-IN (OAUTH 2.0 CON 2FA PARA ADMINISTRADOR)
+// GOOGLE SIGN-IN (VENDEDORES + ADMINISTRADOR, COMPATIBLE CON SAFARI)
 // ════════════════════════════════════════════════════════════════
-const ADMIN_WHITELIST = [
-  "nel0407gael@gmail.com",
-  "admin@chibli.com"
-];
+function isInAppWebView() {
+  return /FBAN|FBAV|Instagram|WhatsApp|Line|MicroMessenger/i.test(navigator.userAgent || "");
+}
 
-async function doGoogleLogin() {
+function handleGoogleAuthError(e) {
+  console.warn("Google Sign-In error:", e);
+  if (e?.code === "auth/popup-closed-by-user" || e?.code === "auth/cancelled-popup-request") return;
+
+  if (isInAppWebView()) {
+    showLoginError("Abre esta página en Safari o Chrome (Google bloquea el inicio de sesión dentro de WhatsApp o redes sociales).");
+    return;
+  }
+  if (e?.code === "auth/operation-not-supported-in-this-environment" || window.location.protocol === "file:") {
+    showLoginError("Google Sign-In requiere servidor web HTTPS (Vercel, Firebase Hosting o http://localhost).");
+  } else if (e?.code === "auth/unauthorized-domain") {
+    const dom = window.location.hostname || "este dominio";
+    showLoginError("Dominio (" + dom + ") no autorizado. Agrégalo en Firebase Authentication > Authorized domains y en Google Cloud OAuth (o abre tu URL principal de Vercel).");
+  } else if (e?.code === "auth/popup-blocked") {
+    showLoginError("Safari bloqueó la ventana de Google. Activa las ventanas emergentes para este sitio e intenta de nuevo.");
+  } else {
+    showLoginError(e?.message || "Error al iniciar sesión con Google.");
+  }
+}
+
+function doGoogleLogin() {
   const authInstance = window._auth || (window.firebase && typeof firebase.auth === "function" ? firebase.auth() : null);
+  const role = document.getElementById("login-role-value")?.value || "vendedor";
   const errEl = document.getElementById("login-error");
-  errEl.classList.remove("show");
+  if (errEl) errEl.classList.remove("show");
 
   if (!authInstance) {
-    errEl.textContent = "Firebase Authentication no disponible.";
-    errEl.classList.add("show");
+    showLoginError("Firebase Authentication no disponible. Verifica tu conexión.");
     return;
   }
 
-  try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    const result = await authInstance.signInWithPopup(provider);
-    const user = result.user;
-    const userEmail = (user.email || "").toLowerCase().trim();
+  // Importante para Safari: llamar signInWithPopup de forma SÍNCRONA dentro del click,
+  // sin await previos, para no perder el gesto del usuario.
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: "select_account" });
 
-    // ── SEGURIDAD ESTRICTA: SOLO CORREO AUTORIZADO DE ADMINISTRADOR ──
-    if (!ADMIN_WHITELIST.includes(userEmail) && !userEmail.endsWith("@chibli.com")) {
-      await authInstance.signOut();
-      errEl.textContent = "Acceso denegado: La cuenta " + userEmail + " no está autorizada como Administrador de Distribuidora Chibli.";
-      errEl.classList.add("show");
-      return;
-    }
+  _loginInProgress = true;
+  setGoogleBtnBusy(true, "Conectando con Google…");
 
-    currentSession = {
-      role: "admin",
-      adminEmail: user.email,
-      adminName: user.displayName || "Nelson Gael (Admin)"
-    };
-    adminUnlocked = true;
-    applySession();
-  } catch (e) {
-    console.warn("Google Sign-In error:", e);
-    if (e.code === "auth/popup-closed-by-user") return;
-    if (e.code === "auth/operation-not-supported-in-this-environment" || window.location.protocol === "file:") {
-      errEl.textContent = "Google Sign-In requiere servidor web (GitHub Pages HTTPS o http://localhost), no abrir el archivo local directo.";
-    } else if (e.code === "auth/unauthorized-domain") {
-      errEl.textContent = "Agrega tu dominio a 'Dominios autorizados' en Firebase Console > Authentication.";
-    } else {
-      errEl.textContent = "Error al iniciar sesión con Google: " + (e.message || e.code);
-    }
-    errEl.classList.add("show");
-  }
+  authInstance.signInWithPopup(provider)
+    .then(async (result) => {
+      try {
+        const session = await resolveAuthorizedUser(result.user, role);
+        currentSession = session;
+        adminUnlocked = session.role === "admin";
+        applySession();
+      } catch (authzErr) {
+        await authInstance.signOut().catch(() => {});
+        showLoginError(authzErr?.message || "No tienes permiso para acceder.");
+      }
+    })
+    .catch(async (e) => {
+      // Respaldo automático en Safari / móvil si bloquea el popup
+      if (e?.code === "auth/popup-blocked") {
+        try {
+          localStorage.setItem(STORAGE_REDIRECT_ROLE, role);
+          setGoogleBtnBusy(true, "Redirigiendo a Google…");
+          await authInstance.signInWithRedirect(provider);
+          return;
+        } catch (redirErr) {
+          localStorage.removeItem(STORAGE_REDIRECT_ROLE);
+          handleGoogleAuthError(redirErr);
+          return;
+        }
+      }
+      handleGoogleAuthError(e);
+    })
+    .finally(() => {
+      _loginInProgress = false;
+      setGoogleBtnBusy(false);
+    });
 }
 
 // ════════════════════════════════════════════════════════════════
-// CONTROL DE INACTIVIDAD DE SESIÓN (SESSION TIMEOUT: 10 MINUTOS)
-// Medida de seguridad OWASP para evitar sesiones abiertas desatendidas
+// CONTROL DE INACTIVIDAD DE SESIÓN
+// Vendedor en ruta: 8 horas | Administrador: 10 minutos
 // ════════════════════════════════════════════════════════════════
-const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos (600,000 ms)
 let inactivityTimer = null;
+let _lastActivityWrite = 0;
+
+function getInactivityLimitMs(role) {
+  return role === "vendedor" ? VENDEDOR_INACTIVITY_MS : ADMIN_INACTIVITY_MS;
+}
 
 function resetInactivityTimer() {
   if (!currentSession) return;
+  const now = Date.now();
+  if (now - _lastActivityWrite > 15000) {
+    _lastActivityWrite = now;
+    try { localStorage.setItem(STORAGE_LAST_ACTIVITY, String(now)); } catch (e) {}
+  }
   clearTimeout(inactivityTimer);
+  const limitMs = getInactivityLimitMs(currentSession.role);
+  const label   = currentSession.role === "vendedor" ? "8 horas" : "10 minutos";
   inactivityTimer = setTimeout(() => {
     if (currentSession) {
-      toast("Tu sesión ha expirado por inactividad (10 minutos) por seguridad.", 5000);
+      toast(`Tu sesión ha expirado por inactividad (${label}) por seguridad.`, 5000);
       doLogout();
     }
-  }, INACTIVITY_LIMIT_MS);
+  }, limitMs);
 }
 
 function stopInactivityTimer() {
@@ -465,44 +356,82 @@ function stopInactivityTimer() {
   inactivityTimer = null;
 }
 
-// Escuchar interacciones para reiniciar el temporizador de inactividad
 ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"].forEach(evt => {
   document.addEventListener(evt, resetInactivityTimer, { passive: true });
 });
 
-// ================================================================
-// RESTAURACIÓN AUTOMÁTICA DE SESIÓN Y MODO DEMO (?role=admin/vendedor)
-// ================================================================
-function initSessionRestore() {
+// ════════════════════════════════════════════════════════════════
+// RESTAURACIÓN DE SESIÓN VERIFICADA POR FIREBASE AUTH (SIN DEMOS)
+// ════════════════════════════════════════════════════════════════
+let _authInitStarted = false;
+
+async function initAuthSession() {
+  if (_authInitStarted) return;
+  const authInstance = window._auth || (window.firebase && typeof firebase.auth === "function" ? firebase.auth() : null);
+  if (!authInstance || !window._firebaseReady) return;
+  _authInitStarted = true;
+
+  let redirectRole = null;
   try {
-    const params = new URLSearchParams(window.location.search);
-    const urlRole = params.get("role") || params.get("demo");
-    if (urlRole === "admin") {
-      currentSession = { role: "admin", adminName: "Nelson Gael (Admin)", adminEmail: "admin@chibli.com" };
-      adminUnlocked = true;
-      applySession();
-      return;
-    } else if (urlRole === "vendedor") {
-      currentSession = { role: "vendedor", vendedorId: "1", vendedorFolio: "VEN-001", vendedorNombre: "Carlos Morales" };
-      applySession();
+    redirectRole = localStorage.getItem(STORAGE_REDIRECT_ROLE);
+    const redirResult = await authInstance.getRedirectResult();
+    if (redirResult && redirResult.user) {
+      localStorage.removeItem(STORAGE_REDIRECT_ROLE);
+      const role = redirectRole || "vendedor";
+      setLoginRole(role);
+      try {
+        const session = await resolveAuthorizedUser(redirResult.user, role);
+        currentSession = session;
+        adminUnlocked = session.role === "admin";
+        applySession();
+        return;
+      } catch (err) {
+        await authInstance.signOut().catch(() => {});
+        showLoginError(err?.message || "Acceso denegado.");
+        return;
+      }
+    }
+    if (redirectRole) localStorage.removeItem(STORAGE_REDIRECT_ROLE);
+  } catch (e) {
+    if (redirectRole) localStorage.removeItem(STORAGE_REDIRECT_ROLE);
+    handleGoogleAuthError(e);
+  }
+
+  let handledInitialUser = false;
+  authInstance.onAuthStateChanged(async (user) => {
+    if (handledInitialUser || _loginInProgress || currentSession || !user) return;
+    handledInitialUser = true;
+
+    const savedRole    = localStorage.getItem(STORAGE_ACTIVE_ROLE) || "vendedor";
+    const lastActivity = Number(localStorage.getItem(STORAGE_LAST_ACTIVITY) || "0");
+    const limitMs      = getInactivityLimitMs(savedRole);
+
+    if (lastActivity > 0 && (Date.now() - lastActivity) > limitMs) {
+      await authInstance.signOut().catch(() => {});
+      localStorage.removeItem(STORAGE_LAST_ACTIVITY);
+      localStorage.removeItem(STORAGE_ACTIVE_ROLE);
+      setLoginRole(savedRole);
+      showLoginError("Tu sesión anterior expiró por inactividad. Vuelve a iniciar sesión.");
       return;
     }
 
-    const saved = sessionStorage.getItem("chibli_session");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed && parsed.role) {
-        currentSession = parsed;
-        if (currentSession.role === "admin") adminUnlocked = true;
-        applySession();
-      }
+    try {
+      setLoginRole(savedRole);
+      const session = await resolveAuthorizedUser(user, savedRole);
+      currentSession = session;
+      adminUnlocked = session.role === "admin";
+      applySession();
+    } catch (err) {
+      await authInstance.signOut().catch(() => {});
+      localStorage.removeItem(STORAGE_LAST_ACTIVITY);
+      localStorage.removeItem(STORAGE_ACTIVE_ROLE);
     }
-  } catch(e) {
-    console.warn("Session restore error:", e);
-  }
+  });
 }
+
+document.addEventListener("firebase-ready", initAuthSession);
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initSessionRestore);
+  document.addEventListener("DOMContentLoaded", initAuthSession);
 } else {
-  initSessionRestore();
+  initAuthSession();
 }

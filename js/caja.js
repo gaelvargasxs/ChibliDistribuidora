@@ -16,16 +16,26 @@ const GASTO_COLORS = {
   "Otro":                "#6B7280",
 };
 
-// Escucha en tiempo real gastos desde Firebase
+let _gastosUnsub = null;
+
+// Escucha en tiempo real gastos desde Firebase (solo Administrador)
 function initGastos() {
-  if (!window._firebaseReady || !window._db) return;
+  if (_gastosUnsub || !window._firebaseReady || !window._db) return;
   const { collection, onSnapshot } = window._fsLib;
-  onSnapshot(collection(window._db, "gastos"), snap => {
+  _gastosUnsub = onSnapshot(collection(window._db, "gastos"), snap => {
     gastos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
                       .sort((a,b) => (b.fecha||"").localeCompare(a.fecha||""));
     renderCaja();
     if (currentSession?.role === "admin") renderAdminDashboard();
-  });
+  }, err => console.warn("gastos onSnapshot error:", err?.code || err?.message));
+}
+
+function stopGastos() {
+  if (_gastosUnsub) {
+    try { _gastosUnsub(); } catch(e) {}
+    _gastosUnsub = null;
+  }
+  gastos = [];
 }
 
 function setCajaPeriod(p, btn) {

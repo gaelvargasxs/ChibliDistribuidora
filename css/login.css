@@ -228,6 +228,17 @@
 .btn-google-login:active {
   transform: scale(.99);
 }
+.btn-google-login:disabled {
+  opacity: .68;
+  cursor: wait;
+}
+.login-google-note {
+  margin-top: .7rem;
+  font-size: .74rem;
+  line-height: 1.45;
+  color: #6B7280;
+  text-align: center;
+}
 .login-divider {
   display: flex;
   align-items: center;

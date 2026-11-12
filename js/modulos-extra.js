@@ -13,13 +13,14 @@
 
   let liveStarted = false;
   let currentExtra = null;
+  let ordersUnsub = null;
 
   // Escucha en vivo de pedidos y gastos (solo admin, una sola vez).
   function startLive() {
     if (liveStarted || !window._firebaseReady || !window._db) return;
     liveStarted = true;
     try {
-      window._db.collection("orders").onSnapshot(snap => {
+      ordersUnsub = window._db.collection("orders").onSnapshot(snap => {
         const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
           .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
         orders.length = 0; orders.push(...list); window.orders = orders;
@@ -28,6 +29,16 @@
     } catch (e) { console.warn("No se pudo escuchar orders:", e); }
     if (typeof initGastos === "function") initGastos();
   }
+
+  window.stopExtraLiveSync = function () {
+    if (ordersUnsub) {
+      try { ordersUnsub(); } catch (e) {}
+      ordersUnsub = null;
+    }
+    if (typeof stopGastos === "function") stopGastos();
+    liveStarted = false;
+    currentExtra = null;
+  };
 
   const original = window.switchMainTab;
   window.switchMainTab = function (tab) {

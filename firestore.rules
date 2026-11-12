@@ -4,41 +4,80 @@ rules_version = '2';
 // Assumed Data Model — Distribuidora Chibli POS & Route
 // ===============================================================
 //
-// Collection: products/{productId}
-//   - name: string (nombre del producto)
-//   - price: number >= 0 (precio unitario de venta)
-//   - precioCosto: number >= 0 (opcional, costo unitario)
-//   - stock: number >= 0 (inventario disponible en piezas)
-//   - piezas: number (piezas por caja)
-//   - category, unit, emoji, image, barcode: string (metadatos del catálogo)
-//
-// Collection: customers/{customerId}
-//   - storeName: string (nombre de la tienda)
-//   - ownerName: string (nombre del dueño/encargado)
-//   - phone, zone, address: string (contacto y ubicación en ruta)
-//   - createdAt: timestamp (opcional)
+// Auth Model:
+//   - Google Sign-In ONLY via Firebase Authentication (verified email).
+//   - Admins: Verified email in explicit admin allowlist.
+//   - Vendedores: Verified email matching an active document in
+//     vendedores/{lowercaseEmail} where activo != false.
+//   - Zero unauthenticated reads or writes anywhere.
+//   - Zero password fields stored in Firestore.
 //
 // Collection: vendedores/{vendedorId}
-//   - folio: string (código de vendedor, ej. VEN-001)
-//   - nombre: string (nombre completo del vendedor)
-//   - email, telefono, zona, password, estado: string (datos de acceso y ruta)
+// Document ID: Normalized lowercase Google email (vendedorId == email)
+// Fields:
+//   - nombre: string (required, 1..120 chars) - nombre completo del vendedor
+//   - folio: string (required, 1..40 chars) - código de vendedor (ej. VEN-001)
+//   - email: string (required, valid lowercase email, <= 150 chars)
+//   - activo: bool (optional, defaults to true when absent)
+//   - createdAt: timestamp (optional, immutable on update)
+//
+// Collection: products/{productId}
+// Document ID: Auto-generated ID
+// Fields:
+//   - name: string (required, 1..150 chars) - nombre del producto
+//   - price: number (required, >= 0, <= 10000000) - precio unitario de venta
+//   - stock: number (required, >= 0, <= 10000000) - inventario en piezas
+//   - precioCosto: number (optional, >= 0, <= 10000000) - costo unitario
+//   - precioCaja: number (optional, >= 0, <= 10000000) - precio por caja
+//   - emoji: string (optional, <= 20 chars) - ícono representativo
+//   - category: string (optional, <= 80 chars) - categoría del catálogo
+//   - unit: string (optional, <= 60 chars) - presentación (ej. 500ml, Pieza)
+//   - piezas: number (optional, >= 0, <= 100000) - piezas por caja
+//   - pesado: bool (optional) - producto pesado / carga
+//   - prioritario: bool (optional) - producto prioritario en catálogo
+//   - codigo: string (optional, <= 60 chars) - SKU o código interno
+//   - image: string (optional, empty, valid http(s) URL <= 2048, or raster base64 <= 200000)
+//   - barcode: string (optional, <= 80 chars) - código de barras
+//   - createdAt: timestamp (optional, immutable on update)
+//
+// Collection: customers/{customerId}
+// Document ID: Auto-generated ID
+// Fields:
+//   - storeName: string (required, 1..150 chars) - nombre de la tienda
+//   - ownerName: string (required, 1..150 chars) - nombre del dueño/encargado
+//   - phone: string (optional, <= 40 chars) - teléfono de contacto
+//   - zone: string (optional, <= 100 chars) - colonia o zona de ruta
+//   - address: string (optional, <= 300 chars) - dirección de entrega
+//   - createdAt: timestamp (optional, immutable on update)
 //
 // Collection: orders/{orderId}
-//   - customerId: string (ID de la tienda cliente)
-//   - customerName, ownerName, phone, address: string (datos de entrega)
-//   - lines: list (productos vendidos, cantidad > 0)
-//   - total: number >= 0 (importe total cobrado)
-//   - totalDescuento: number >= 0 (descuento aplicado)
-//   - status: string ('Entregado')
-//   - vendedorId, vendedorFolio, vendedorNombre: string | null
-//   - createdAt: timestamp
+// Document ID: Auto-generated ID
+// Fields:
+//   - customerId: string (required, 1..120 chars) - ID de la tienda cliente
+//   - customerName: string (required, 1..150 chars) - nombre de la tienda
+//   - ownerName: string (optional, <= 150 chars) - nombre del dueño
+//   - phone: string (optional, <= 40 chars) - teléfono de entrega
+//   - address: string (optional, <= 300 chars) - dirección de entrega
+//   - lines: list (required, 1..200 items) - líneas de productos vendidos
+//   - total: number (required, >= 0, <= 10000000) - importe total cobrado
+//   - totalDescuento: number (optional, >= 0, <= 10000000) - descuento aplicado
+//   - status: string (required, in ['Entregado', 'Cancelado', 'Pendiente'])
+//   - vendedorId: string | null (optional, <= 150 chars)
+//   - vendedorEmail: string | null (optional, <= 150 chars; must equal authEmail() on vendedor create)
+//   - vendedorFolio: string | null (optional, <= 40 chars)
+//   - vendedorNombre: string | null (optional, <= 120 chars)
+//   - createdAt: timestamp (optional, immutable on update)
 //
 // Collection: gastos/{gastoId}
-//   - categoria: string (Gasolina, Compra de mercancía, Salarios, etc.)
-//   - monto: number > 0 (importe del egreso)
-//   - descripcion, responsable: string (opcional)
-//   - fecha: string (YYYY-MM-DD)
-//   - createdAt: timestamp (opcional)
+// Document ID: Auto-generated ID
+// Fields:
+//   - categoria: string (required, 1..80 chars) - categoría del egreso
+//   - monto: number (required, > 0, <= 10000000) - importe del egreso
+//   - fecha: string (required, 8..20 chars) - fecha YYYY-MM-DD
+//   - descripcion: string (optional, <= 500 chars)
+//   - nota: string (optional, <= 500 chars)
+//   - responsable: string (optional, <= 120 chars)
+//   - createdAt: timestamp (optional, immutable on update)
 //
 // ===============================================================
 
@@ -46,55 +85,290 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ===============================================================
-    // Helper Functions
+    // Helper Functions — Authentication & Authorization
     // ===============================================================
 
+    // Check if the request comes from an authenticated Firebase Auth user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user has a verified email claim in their token
+    function isEmailVerified() {
+      return isAuthenticated() &&
+        'email_verified' in request.auth.token &&
+        request.auth.token.email_verified == true &&
+        'email' in request.auth.token &&
+        request.auth.token.email is string;
+    }
+
+    // Normalized lowercase email of the authenticated user
+    function authEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    // Check if the user is an authorized Admin (trusted token allowlist only)
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'nel0407gael@gmail.com' ||
-        request.auth.token.email == 'admin@chibli.com'
+      return isAuthenticated() &&
+        isEmailVerified() &&
+        authEmail() in ['nel0407gael@gmail.com', 'admin@chibli.com'];
+    }
+
+    // Check if the user is an active registered Vendedor in Firestore
+    function isVendedor() {
+      return isAuthenticated() &&
+        isEmailVerified() &&
+        exists(/databases/$(database)/documents/vendedores/$(authEmail())) &&
+        get(/databases/$(database)/documents/vendedores/$(authEmail())).data.get('activo', true) == true;
+    }
+
+    // ===============================================================
+    // Helper Functions — Schema & Data Validation
+    // ===============================================================
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(data, field, minLen, maxLen) {
+      return data[field] is string &&
+        data[field].size() >= minLen &&
+        data[field].size() <= maxLen;
+    }
+
+    function isValidOptionalString(data, field, minLen, maxLen) {
+      return !(field in data) ||
+        (data[field] is string &&
+         data[field].size() >= minLen &&
+         data[field].size() <= maxLen);
+    }
+
+    function isValidNullableString(data, field, maxLen) {
+      return !(field in data) ||
+        data[field] == null ||
+        (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    function isValidOptionalBool(data, field) {
+      return !(field in data) || data[field] is bool;
+    }
+
+    function isValidOptionalTimestamp(data, field) {
+      return !(field in data) || data[field] is timestamp;
+    }
+
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string &&
+        (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function isValidProductImage(data) {
+      return !('image' in data) || (
+        data.image is string && (
+          data.image == '' ||
+          (isValidUrl(data.image) && data.image.size() <= 2048) ||
+          (data.image.size() <= 200000 &&
+           data.image.matches("^data:image/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$"))
+        )
       );
     }
 
-    // 1. PRODUCTOS (Catálogo e Inventario)
-    match /products/{productId} {
-      allow read: if true;
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
+    function isCreatedAtUnchanged() {
+      return !('createdAt' in resource.data) ||
+        ('createdAt' in request.resource.data &&
+         request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // ===============================================================
+    // Domain Validators (Used in BOTH create and update rules)
+    // ===============================================================
+
+    function isValidVendedor(data) {
+      return hasOnlyAllowedFields(['nombre', 'folio', 'email', 'activo', 'createdAt']) &&
+        hasRequiredFields(['nombre', 'folio', 'email']) &&
+        validStringLength(data, 'nombre', 1, 120) &&
+        validStringLength(data, 'folio', 1, 40) &&
+        data.email is string &&
+        data.email.size() <= 150 &&
+        isValidEmail(data.email) &&
+        data.email == data.email.lower() &&
+        isValidOptionalBool(data, 'activo') &&
+        isValidOptionalTimestamp(data, 'createdAt');
+    }
+
+    function isValidProduct(data) {
+      return hasOnlyAllowedFields([
+          'name', 'price', 'precioCosto', 'precioCaja', 'emoji',
+          'category', 'stock', 'unit', 'piezas', 'pesado',
+          'prioritario', 'codigo', 'image', 'barcode', 'createdAt'
+        ]) &&
+        hasRequiredFields(['name', 'price', 'stock']) &&
+        validStringLength(data, 'name', 1, 150) &&
+        data.price is number && data.price >= 0 && data.price <= 10000000 &&
+        data.stock is number && data.stock >= 0 && data.stock <= 10000000 &&
+        (!('precioCosto' in data) || (data.precioCosto is number && data.precioCosto >= 0 && data.precioCosto <= 10000000)) &&
+        (!('precioCaja' in data) || (data.precioCaja is number && data.precioCaja >= 0 && data.precioCaja <= 10000000)) &&
+        (!('piezas' in data) || (data.piezas is number && data.piezas >= 0 && data.piezas <= 100000)) &&
+        isValidOptionalString(data, 'emoji', 0, 20) &&
+        isValidOptionalString(data, 'category', 0, 80) &&
+        isValidOptionalString(data, 'unit', 0, 60) &&
+        isValidOptionalString(data, 'codigo', 0, 60) &&
+        isValidOptionalString(data, 'barcode', 0, 80) &&
+        isValidOptionalBool(data, 'pesado') &&
+        isValidOptionalBool(data, 'prioritario') &&
+        isValidProductImage(data) &&
+        isValidOptionalTimestamp(data, 'createdAt');
+    }
+
+    function isValidProductUpdate() {
+      return isValidProduct(request.resource.data) && isCreatedAtUnchanged();
+    }
+
+    function isValidVendedorStockDeduction() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
         request.resource.data.stock is number &&
         request.resource.data.stock >= 0 &&
-        request.resource.data.stock <= resource.data.stock
-      );
+        request.resource.data.stock <= resource.data.stock &&
+        request.resource.data.stock <= 10000000;
     }
 
-    // 2. CLIENTES / TIENDAS (Ruta y Comercios)
-    match /customers/{customerId} {
-      allow read: if true;
-      allow create, update: if true;
+    function isValidCustomer(data) {
+      return hasOnlyAllowedFields(['storeName', 'ownerName', 'phone', 'zone', 'address', 'createdAt']) &&
+        hasRequiredFields(['storeName', 'ownerName']) &&
+        validStringLength(data, 'storeName', 1, 150) &&
+        validStringLength(data, 'ownerName', 1, 150) &&
+        isValidOptionalString(data, 'phone', 0, 40) &&
+        isValidOptionalString(data, 'zone', 0, 100) &&
+        isValidOptionalString(data, 'address', 0, 300) &&
+        isValidOptionalTimestamp(data, 'createdAt');
+    }
+
+    function isValidOrderLine(line) {
+      return line is map &&
+        line.keys().hasOnly([
+          'productId', 'name', 'emoji', 'qty', 'cajas',
+          'price', 'priceLista', 'descuentoPct', 'subtotal'
+        ]) &&
+        line.keys().hasAll(['name', 'qty', 'price', 'subtotal']) &&
+        validStringLength(line, 'name', 1, 200) &&
+        line.qty is number && line.qty > 0 && line.qty <= 100000 &&
+        line.price is number && line.price >= 0 && line.price <= 10000000 &&
+        line.subtotal is number && line.subtotal >= 0 && line.subtotal <= 10000000 &&
+        isValidOptionalString(line, 'productId', 1, 120) &&
+        isValidOptionalString(line, 'emoji', 0, 20) &&
+        (!('cajas' in line) || (line.cajas is number && line.cajas >= 0 && line.cajas <= 100000)) &&
+        (!('priceLista' in line) || (line.priceLista is number && line.priceLista >= 0 && line.priceLista <= 10000000)) &&
+        (!('descuentoPct' in line) || (line.descuentoPct is number && line.descuentoPct >= 0 && line.descuentoPct <= 100));
+    }
+
+    function isValidOrder(data) {
+      return hasOnlyAllowedFields([
+          'customerId', 'customerName', 'ownerName', 'phone', 'address',
+          'lines', 'total', 'totalDescuento', 'status',
+          'vendedorId', 'vendedorEmail', 'vendedorFolio', 'vendedorNombre', 'createdAt'
+        ]) &&
+        hasRequiredFields(['customerId', 'customerName', 'lines', 'total', 'status']) &&
+        validStringLength(data, 'customerId', 1, 120) &&
+        validStringLength(data, 'customerName', 1, 150) &&
+        isValidOptionalString(data, 'ownerName', 0, 150) &&
+        isValidOptionalString(data, 'phone', 0, 40) &&
+        isValidOptionalString(data, 'address', 0, 300) &&
+        data.lines is list &&
+        data.lines.size() >= 1 &&
+        data.lines.size() <= 200 &&
+        isValidOrderLine(data.lines[0]) &&
+        data.total is number && data.total >= 0 && data.total <= 10000000 &&
+        (!('totalDescuento' in data) || (data.totalDescuento is number && data.totalDescuento >= 0 && data.totalDescuento <= 10000000)) &&
+        data.status in ['Entregado', 'Cancelado', 'Pendiente'] &&
+        isValidNullableString(data, 'vendedorId', 150) &&
+        isValidNullableString(data, 'vendedorEmail', 150) &&
+        isValidNullableString(data, 'vendedorFolio', 40) &&
+        isValidNullableString(data, 'vendedorNombre', 120) &&
+        isValidOptionalTimestamp(data, 'createdAt');
+    }
+
+    function isValidGasto(data) {
+      return hasOnlyAllowedFields(['categoria', 'monto', 'descripcion', 'nota', 'responsable', 'fecha', 'createdAt']) &&
+        hasRequiredFields(['categoria', 'monto', 'fecha']) &&
+        validStringLength(data, 'categoria', 1, 80) &&
+        data.monto is number && data.monto > 0 && data.monto <= 10000000 &&
+        validStringLength(data, 'fecha', 8, 20) &&
+        isValidOptionalString(data, 'descripcion', 0, 500) &&
+        isValidOptionalString(data, 'nota', 0, 500) &&
+        isValidOptionalString(data, 'responsable', 0, 120) &&
+        isValidOptionalTimestamp(data, 'createdAt');
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // 1. VENDEDORES (Acceso en Ruta por Google Email y Gestión Admin)
+    //    - get: Admin o el propio usuario verificando únicamente su propio correo
+    //    - list: Solo Admin (cero enumeración de vendedores ni fuga de correos)
+    match /vendedores/{vendedorId} {
+      allow get: if isAdmin() ||
+        (isAuthenticated() && isEmailVerified() && vendedorId == authEmail());
+      allow list: if isAdmin();
+      allow create: if isAdmin() &&
+        isValidVendedor(request.resource.data) &&
+        vendedorId == request.resource.data.email;
+      allow update: if isAdmin() &&
+        isValidVendedor(request.resource.data) &&
+        vendedorId == request.resource.data.email &&
+        isCreatedAtUnchanged();
       allow delete: if isAdmin();
     }
 
-    // 3. VENDEDORES (Acceso en Ruta y Gestión Admin)
-    match /vendedores/{vendedorId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
+    // 2. PRODUCTOS (Catálogo e Inventario)
+    match /products/{productId} {
+      allow read: if isAdmin() || isVendedor();
+      allow create: if isAdmin() && isValidProduct(request.resource.data);
+      allow update: if (isAdmin() && isValidProductUpdate()) ||
+        (isVendedor() && isValidVendedorStockDeduction());
+      allow delete: if isAdmin();
+    }
+
+    // 3. CLIENTES / TIENDAS (Ruta y Comercios)
+    match /customers/{customerId} {
+      allow read: if isAdmin() || isVendedor();
+      allow create: if (isAdmin() || isVendedor()) && isValidCustomer(request.resource.data);
+      allow update: if isAdmin() &&
+        isValidCustomer(request.resource.data) &&
+        isCreatedAtUnchanged();
+      allow delete: if isAdmin();
     }
 
     // 4. PEDIDOS / VENTAS (Carrito, Historial, Dashboard, Caja, Tickets, Pedidos)
     match /orders/{orderId} {
-      allow read: if true;
-      allow create: if request.resource.data.customerId is string &&
-        request.resource.data.lines is list &&
-        request.resource.data.lines.size() > 0 &&
-        request.resource.data.total is number &&
-        request.resource.data.total >= 0;
-      allow update, delete: if isAdmin();
+      allow read: if isAdmin() ||
+        (isVendedor() && resource.data.vendedorEmail == authEmail());
+      allow create: if ((isVendedor() &&
+          request.resource.data.vendedorEmail == authEmail() &&
+          request.resource.data.status == 'Entregado') || isAdmin()) &&
+        isValidOrder(request.resource.data);
+      allow update: if isAdmin() &&
+        isValidOrder(request.resource.data) &&
+        isCreatedAtUnchanged();
+      allow delete: if isAdmin();
     }
 
-    // 5. GASTOS (Módulo de Contabilidad / Caja)
+    // 5. GASTOS (Módulo de Contabilidad / Caja — Solo Administrador)
     match /gastos/{gastoId} {
-      allow read, write: if isAdmin();
+      allow read, delete: if isAdmin();
+      allow create: if isAdmin() && isValidGasto(request.resource.data);
+      allow update: if isAdmin() &&
+        isValidGasto(request.resource.data) &&
+        isCreatedAtUnchanged();
     }
 
     // 6. DENEGACIÓN POR DEFECTO

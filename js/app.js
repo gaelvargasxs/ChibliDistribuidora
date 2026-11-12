@@ -1,5 +1,4 @@
 // ═══ APP · ESTADO Y ESCUCHAS EN TIEMPO REAL (FIRESTORE) ═══
-const ADMIN_PIN = "1234";
 let adminUnlocked = false;
 let products   = window.products || [];
 let vendedores = window.vendedores || [];
@@ -21,69 +20,111 @@ window.products = products;
 window.vendedores = vendedores;
 window.customers = customers;
 
+let _appUnsubscribes = [];
+let _appSyncRole = null;
 
+function stopAppDataSync() {
+  _appUnsubscribes.forEach(unsub => {
+    try { if (typeof unsub === "function") unsub(); } catch(e) {}
+  });
+  _appUnsubscribes = [];
+  _appSyncRole = null;
+  if (typeof window.stopExtraLiveSync === "function") window.stopExtraLiveSync();
 
-function initApp() {
-  if (!window._fsLib || !window._db) return;
+  products.length = 0;
+  customers.length = 0;
+  vendedores.length = 0;
+  orders.length = 0;
+  cart = {}; window.cart = cart;
+  descuentos = {}; window.descuentos = descuentos;
+  activeCustomerId = null;
+  activeCustomerData = null;
+}
+
+function startAppDataSync(session) {
+  if (!session || !window._firebaseReady || !window._db || !window._fsLib) return;
+  const syncKey = session.role + ":" + (session.vendedorEmail || session.adminEmail || "");
+  if (_appSyncRole === syncKey && _appUnsubscribes.length) return;
+
+  stopAppDataSync();
+  _appSyncRole = syncKey;
+
   const { collection, onSnapshot } = window._fsLib;
   const db = window._db;
 
-  // 1. Escuchador en vivo: VENDEDORES
-  onSnapshot(collection(db, "vendedores"), snap => {
-    vendedores = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""));
-    window.vendedores = vendedores;
-    if (typeof populateLoginVendedores === "function") populateLoginVendedores();
-    if (typeof renderVendedoresList === "function") renderVendedoresList();
-  }, err => console.warn("vendedores onSnapshot error:", err));
+  // 1. PRODUCTOS (Inventario y Catálogo en tiempo real — solo autenticado)
+  _appUnsubscribes.push(
+    onSnapshot(collection(db, "products"), snap => {
+      products.length = 0;
+      products.push(
+        ...snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      );
+      window.products = products;
+      if (typeof renderStockList === "function") {
+        try { renderStockList(); } catch(e) { console.warn("renderStockList error:", e); }
+      }
+      if (typeof renderProducts === "function") {
+        try { renderProducts(); } catch(e) { console.warn("renderProducts error:", e); }
+      }
+    }, err => console.warn("products onSnapshot error:", err))
+  );
 
-  // 2. Escuchador en vivo: PRODUCTOS (Inventario y Catálogo en tiempo real)
-  onSnapshot(collection(db, "products"), snap => {
-    products = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    window.products = products;
-    if (typeof renderStockList === "function") {
-      try { renderStockList(); } catch(e) { console.warn("renderStockList error:", e); }
-    }
-    if (typeof renderProducts === "function") {
-      try { renderProducts(); } catch(e) { console.warn("renderProducts error:", e); }
-    }
-  }, err => console.warn("products onSnapshot error:", err));
+  // 2. TIENDAS / CLIENTES (solo autenticado)
+  _appUnsubscribes.push(
+    onSnapshot(collection(db, "customers"), snap => {
+      customers.length = 0;
+      customers.push(
+        ...snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (a.storeName || "").localeCompare(b.storeName || ""))
+      );
+      window.customers = customers;
+      if (typeof renderCustomersList === "function") {
+        try { renderCustomersList(); } catch(e) { console.warn("renderCustomersList error:", e); }
+      }
+    }, err => console.warn("customers onSnapshot error:", err))
+  );
 
-  // 3. Escuchador en vivo: TIENDAS (Clientes)
-  onSnapshot(collection(db, "customers"), snap => {
-    customers = snap.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (a.storeName || "").localeCompare(b.storeName || ""));
-    window.customers = customers;
-    if (typeof renderCustomersList === "function") {
-      try { renderCustomersList(); } catch(e) { console.warn("renderCustomersList error:", e); }
-    }
-  }, err => console.warn("customers onSnapshot error:", err));
-}
+  // 3. ADMINISTRADOR: lista completa de vendedores autorizados
+  if (session.role === "admin") {
+    _appUnsubscribes.push(
+      onSnapshot(collection(db, "vendedores"), snap => {
+        vendedores.length = 0;
+        vendedores.push(
+          ...snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""))
+        );
+        window.vendedores = vendedores;
+        if (typeof renderVendedoresList === "function") renderVendedoresList();
+      }, err => console.warn("vendedores onSnapshot error:", err))
+    );
+  }
 
-let _appInitRan = false;
-function tryInitApp() {
-  if (_appInitRan) return;
-  if (window._firebaseReady && window._db && window._fsLib) {
-    _appInitRan = true;
-    initApp();
+  // 4. VENDEDOR: escucha únicamente sus propios pedidos para su historial del día
+  if (session.role === "vendedor" && session.vendedorEmail) {
+    try {
+      const ownOrdersQuery = db.collection("orders").where("vendedorEmail", "==", session.vendedorEmail);
+      _appUnsubscribes.push(
+        ownOrdersQuery.onSnapshot(snap => {
+          orders.length = 0;
+          orders.push(
+            ...snap.docs.map(d => ({ id: d.id, ...d.data() }))
+              .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
+          );
+          window.orders = orders;
+          if (typeof renderHistorial === "function") {
+            try { renderHistorial(); } catch(e) { console.warn("renderHistorial error:", e); }
+          }
+        }, err => console.warn("vendedor orders onSnapshot error:", err?.code || err?.message))
+      );
+    } catch(e) {
+      console.warn("vendedor orders query error:", e);
+    }
   }
 }
 
-document.addEventListener("firebase-ready", tryInitApp);
-if (window._firebaseReady && window._db) {
-  tryInitApp();
-}
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", tryInitApp);
-} else {
-  tryInitApp();
-}
-setTimeout(tryInitApp, 100);
-setTimeout(tryInitApp, 500);
+window.startAppDataSync = startAppDataSync;
+window.stopAppDataSync  = stopAppDataSync;
 
 // ── NAVEGACIÓN PRINCIPAL: INVENTARIO Y TIENDAS/VENDEDORES ──
 function switchMainTab(tab) {
@@ -172,6 +213,9 @@ function switchTab(tab, sub) {
   document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".drawer-nav-item").forEach(d => d.classList.remove("active"));
+  document.querySelectorAll(".header-vend-nav-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.vendTab === tab);
+  });
 
   const targetView = document.getElementById("view-" + tab);
   if (targetView) targetView.classList.add("active");
@@ -230,79 +274,3 @@ document.addEventListener("click", (e) => {
     menu.classList.remove("open");
   }
 });
-
-// ── PROTECCIÓN PRESENTACIÓN (DATOS SEMILLA EN CASO DE INTERNET LENTO O FALLO) ──
-setTimeout(() => {
-  if (!products.length && (!window.products || !window.products.length)) {
-    console.info("Cargando catálogo base de demostración offline para la presentación...");
-    products = [
-      { id: "1", name: "Agua Ciel", category: "AGUA", price: 50, precioCaja: 1140, precioCosto: 38, piezas: 24, stock: 44, unit: "500ml", codigo: "AGU-24-500", emoji: "💧" },
-      { id: "2", name: "Power", category: "AGUA", price: 60, precioCaja: 684, precioCosto: 46, piezas: 12, stock: 171, unit: "1L", codigo: "POW-12-1L", prioritario: true, emoji: "⚡" },
-      { id: "3", name: "Aceite Vegetal Mixto", category: "BÁSICOS", price: 28, precioCaja: 320, precioCosto: 21, piezas: 12, stock: 48, unit: "1L", codigo: "ACE-12-VEG", prioritario: true, emoji: "🌻" },
-      { id: "4", name: "Shampoo Savile", category: "BÁSICOS", price: 50, precioCaja: 570, precioCosto: 39, piezas: 12, stock: 57, unit: "1L", codigo: "SAV-12-1L", emoji: "🧴" },
-      { id: "5", name: "Galletas Marías Gamesa", category: "BOTANAS", price: 40, precioCaja: 456, precioCosto: 31, piezas: 12, stock: 40, unit: "Caja", codigo: "MAR-12-PZ", emoji: "🍪" },
-      { id: "6", name: "Refresco Pepsi 600ml", category: "REFRESCOS", price: 22, precioCaja: 240, precioCosto: 17, piezas: 12, stock: 300, unit: "600ml", codigo: "PEP-12-600", emoji: "🥤" },
-      { id: "7", name: "Dulce Gael Tradicional", category: "DULCES", price: 2500, precioCaja: 57000, precioCosto: 1900, piezas: 24, stock: 150, unit: "500g", codigo: "GAE-24-500", emoji: "🍬" }
-    ];
-    window.products = products;
-    if (typeof renderStockList === "function") renderStockList();
-    if (typeof renderProducts === "function") renderProducts();
-  }
-  if (!customers.length && (!window.customers || !window.customers.length)) {
-    customers = [
-      { id: "c1", storeName: "Abarrotes Don Pepe", ownerName: "José Pérez", phone: "6181234567", zone: "Centro", address: "Av. 20 de Noviembre #402" },
-      { id: "c2", storeName: "Tienda San Judas", ownerName: "María López", phone: "6189876543", zone: "Norte", address: "Calle Victoria #115" },
-      { id: "c3", storeName: "Super El Ahorro", ownerName: "Roberto Gómez", phone: "6185551234", zone: "Oriente", address: "Blvd. Dolores del Río #89" }
-    ];
-    window.customers = customers;
-    if (typeof renderCustomersList === "function") renderCustomersList();
-  }
-  if (!vendedores.length && (!window.vendedores || !window.vendedores.length)) {
-    vendedores = [
-      { id: "1", folio: "VEN-001", nombre: "Carlos Morales", email: "vendedor1@chibli.com", activo: true, pin: "1234" },
-      { id: "2", folio: "VEN-002", nombre: "Ana Martínez", email: "vendedor2@chibli.com", activo: true, pin: "1234" }
-    ];
-    window.vendedores = vendedores;
-    if (typeof renderVendedoresList === "function") renderVendedoresList();
-    if (typeof populateLoginVendedores === "function") populateLoginVendedores();
-  }
-
-  if (!orders.length && (!window.orders || !window.orders.length)) {
-    orders = [
-      {
-        id: "PED-1001",
-        customerName: "Abarrotes Don Pepe",
-        ownerName: "José Pérez",
-        phone: "6181234567",
-        address: "Av. 20 de Noviembre #402",
-        status: "Entregado",
-        vendedorNombre: "Carlos Morales",
-        vendedorId: "1", vendedorFolio: "VEN-001",
-        total: 1824.00,
-        createdAt: { toDate: () => new Date(Date.now() - 3600000 * 2) },
-        lines: [
-          { name: "Agua Ciel 24x500ml (1 caja)", qty: 24, cajas: 1, price: 1140, subtotal: 1140, emoji: "💧" },
-          { name: "Power 12x1L (1 caja)", qty: 12, cajas: 1, price: 684, subtotal: 684, emoji: "⚡" }
-        ]
-      },
-      {
-        id: "PED-1002",
-        customerName: "Tienda San Judas",
-        ownerName: "María López",
-        phone: "6189876543",
-        address: "Calle Victoria #115",
-        status: "Entregado",
-        vendedorNombre: "Carlos Morales",
-        vendedorId: "1", vendedorFolio: "VEN-001",
-        total: 960.00,
-        createdAt: { toDate: () => new Date(Date.now() - 3600000 * 5) },
-        lines: [
-          { name: "Aceite Vegetal Mixto (3 cajas)", qty: 36, cajas: 3, price: 320, subtotal: 960, emoji: "🌻" }
-        ]
-      }
-    ];
-    window.orders = orders;
-    if (typeof renderHistorial === "function") renderHistorial();
-  }
-
-}, 1200);

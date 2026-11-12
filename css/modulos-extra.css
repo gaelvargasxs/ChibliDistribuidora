@@ -1385,3 +1385,359 @@ body.role-admin.theme-dark #pendientes-summary-card .btn-secondary {
   color: #F8FAFC !important;
   border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   TEMA OSCURO OBSIDIANA SIEMPRE ACTIVO PARA VENDEDORES
+   (Independiente del toggle de tema del Administrador)
+   ══════════════════════════════════════════════════════════════════ */
+body.role-vendedor {
+  background: #0B0F17 !important;
+  color: #F1F5F9 !important;
+}
+
+/* Badges de íconos SVG por categoría (reemplazan 📦 en Catálogo y Pedido) */
+.cat-svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tone-sky     { background: rgba(56, 189, 248, 0.14) !important; border-color: rgba(56, 189, 248, 0.28) !important; color: #38BDF8 !important; }
+.tone-violet  { background: rgba(139, 92, 246, 0.16) !important; border-color: rgba(139, 92, 246, 0.3)  !important; color: #A78BFA !important; }
+.tone-amber   { background: rgba(245, 158, 11, 0.15) !important; border-color: rgba(245, 158, 11, 0.28) !important; color: #FBBF24 !important; }
+.tone-gold    { background: rgba(234, 179, 8, 0.15)  !important; border-color: rgba(234, 179, 8, 0.28)  !important; color: #FACC15 !important; }
+.tone-emerald { background: rgba(16, 185, 129, 0.15) !important; border-color: rgba(16, 185, 129, 0.28) !important; color: #34D399 !important; }
+.tone-cyan    { background: rgba(34, 211, 238, 0.14) !important; border-color: rgba(34, 211, 238, 0.28) !important; color: #22D3EE !important; }
+.tone-rose    { background: rgba(244, 63, 94, 0.15)  !important; border-color: rgba(244, 63, 94, 0.28)  !important; color: #FB7185 !important; }
+.tone-orange  { background: rgba(249, 115, 22, 0.15) !important; border-color: rgba(249, 115, 22, 0.28) !important; color: #FB923C !important; }
+.tone-blue    { background: rgba(59, 130, 246, 0.16) !important; border-color: rgba(59, 130, 246, 0.3)  !important; color: #60A5FA !important; }
+.tone-slate   { background: rgba(148, 163, 184, 0.14)!important; border-color: rgba(148, 163, 184, 0.26)!important; color: #94A3B8 !important; }
+
+/* Header superior oscuro para Vendedor */
+body.role-vendedor #app-header {
+  background: rgba(19, 25, 36, 0.94) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32) !important;
+}
+
+body.role-vendedor #app-header .header-sub {
+  color: #94A3B8 !important;
+}
+
+body.role-vendedor #app-header .header-title {
+  color: #FFFFFF !important;
+}
+
+body.role-vendedor #app-header .header-hamburger-btn {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+body.role-vendedor #app-header .header-hamburger-btn svg {
+  stroke: #FFFFFF !important;
+}
+
+body.role-vendedor .header-cart-pill-btn {
+  background: #1A2232 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #E2E8F0 !important;
+}
+
+body.role-vendedor .header-cart-counter {
+  background: #334155 !important;
+  color: #FFFFFF !important;
+}
+
+body.role-vendedor .header-cart-pill-btn.has-items {
+  background: rgba(225, 29, 46, 0.16) !important;
+  border-color: rgba(225, 29, 46, 0.44) !important;
+  color: #FCA5A5 !important;
+}
+
+body.role-vendedor .header-cart-pill-btn.has-items .header-cart-counter {
+  background: #E11D2E !important;
+  color: #FFFFFF !important;
+}
+
+/* Navegación superior compacta solo en escritorio >= 1024px para Vendedor */
+.header-vend-nav {
+  display: none;
+  align-items: center;
+  gap: 0.28rem;
+  background: #1A2232;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.24rem;
+  border-radius: 999px;
+}
+
+@media (min-width: 1024px) {
+  body.role-vendedor .header-vend-nav {
+    display: inline-flex;
+  }
+  body.role-vendedor #app-header .header-logo.dc-logo-badge {
+    display: flex !important;
+    width: 38px;
+    height: 38px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.14);
+  }
+}
+
+.header-vend-nav-btn {
+  border: 0;
+  background: transparent;
+  color: #94A3B8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.42rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.header-vend-nav-btn:hover:not(.active) {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.header-vend-nav-btn.active {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(225, 29, 46, 0.34);
+}
+
+/* Drawer móvil para Vendedor (Negro Carbón + Rojo Chibli igual que Admin) */
+body.role-vendedor #app-drawer {
+  background: linear-gradient(180deg, #11151E 0%, #0B0E14 100%) !important;
+  color: #F8FAFC !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 0 24px 24px 0 !important;
+}
+
+body.role-vendedor #app-drawer .drawer-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.role-vendedor #app-drawer .drawer-title {
+  color: #FFFFFF !important;
+}
+
+body.role-vendedor #app-drawer .drawer-subtitle {
+  color: #94A3B8 !important;
+}
+
+body.role-vendedor #app-drawer .drawer-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+
+body.role-vendedor #app-drawer .drawer-user-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.role-vendedor #app-drawer .drawer-user-name {
+  color: #F8FAFC !important;
+}
+
+body.role-vendedor #app-drawer .drawer-user-folio {
+  color: #94A3B8 !important;
+}
+
+#drawer-group-vendedor .drawer-nav-item {
+  border-radius: 12px;
+  margin-bottom: 0.28rem;
+  padding: 0.78rem 0.95rem;
+  color: #CBD5E1 !important;
+  font-weight: 700;
+}
+
+#drawer-group-vendedor .drawer-nav-item svg {
+  stroke: #94A3B8 !important;
+}
+
+#drawer-group-vendedor .drawer-nav-item:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #FFFFFF !important;
+}
+
+#drawer-group-vendedor .drawer-nav-item.active {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 20px rgba(225, 29, 46, 0.36) !important;
+}
+
+#drawer-group-vendedor .drawer-nav-item.active svg {
+  stroke: #FFFFFF !important;
+}
+
+.drawer-nav-badge {
+  margin-left: auto;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: rgba(225, 29, 46, 0.24);
+  color: #FCA5A5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  align-items: center;
+  justify-content: center;
+}
+
+#drawer-group-vendedor .drawer-nav-item.active .drawer-nav-badge {
+  background: rgba(255, 255, 255, 0.24);
+  color: #FFFFFF;
+}
+
+body.role-vendedor #app-drawer .drawer-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.role-vendedor #app-drawer .drawer-logout-btn {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #F87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.24) !important;
+}
+
+/* Modales, menú de perfil, inputs, toasts y empty states en Vendedor */
+body.role-vendedor #header-menu {
+  right: 0;
+}
+body.role-vendedor #header-menu,
+body.role-vendedor .confirm-box,
+body.role-vendedor .modal-sheet {
+  background: #131924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #F1F5F9 !important;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.58) !important;
+}
+
+body.role-vendedor .modal-handle {
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+body.role-vendedor .header-menu-label,
+body.role-vendedor .confirm-title,
+body.role-vendedor .modal-title {
+  color: #F8FAFC !important;
+}
+
+body.role-vendedor .header-menu-sub,
+body.role-vendedor .confirm-msg,
+body.role-vendedor .modal-sheet label {
+  color: #94A3B8 !important;
+}
+
+body.role-vendedor .header-menu-btn {
+  color: #F87171 !important;
+}
+
+body.role-vendedor .header-menu-btn:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+
+body.role-vendedor .modal-sheet input,
+body.role-vendedor .modal-sheet select,
+body.role-vendedor .modal-sheet textarea {
+  background: #1A2232 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #F8FAFC !important;
+  font-size: 16px !important;
+}
+
+body.role-vendedor .modal-sheet input::placeholder,
+body.role-vendedor .modal-sheet textarea::placeholder {
+  color: #64748B !important;
+}
+
+body.role-vendedor .modal-sheet .btn-primary {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+  box-shadow: 0 6px 18px rgba(225, 29, 46, 0.34);
+  border-radius: 12px;
+}
+
+body.role-vendedor .modal-sheet .btn-success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.32);
+  border-radius: 12px;
+}
+
+body.role-vendedor .confirm-actions .btn-secondary,
+body.role-vendedor .modal-sheet .btn-secondary {
+  background: #1A2232 !important;
+  color: #E2E8F0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px;
+}
+
+body.role-vendedor .empty-state {
+  color: #94A3B8 !important;
+}
+
+body.role-vendedor .spinner {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-top-color: #E11D2E !important;
+}
+
+body.role-vendedor #toast {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+}
+
+/* Modal Comprobante de Pedido Confirmado */
+.order-confirmed-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.55rem;
+}
+
+.order-confirmed-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34D399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.order-confirmed-desc {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  margin-bottom: 0.9rem;
+  line-height: 1.45;
+}
+
+.order-confirmed-pre {
+  background: var(--gray-50);
+  border-radius: 10px;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.74rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 1rem;
+  border: 1px solid var(--gray-200);
+  max-height: 210px;
+  overflow-y: auto;
+  color: var(--gray-800);
+  line-height: 1.45;
+}
+
+body.role-vendedor .order-confirmed-desc {
+  color: #94A3B8 !important;
+}
+
+body.role-vendedor .order-confirmed-pre {
+  background: #0F1520 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}

@@ -84,6 +84,10 @@ function renderProducts(filter = document.getElementById("product-search")?.valu
     const precio = Number(p.price) || 0;
     const money = value => value.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2});
     const image = typeof p.image === "string" && /^(https?:\/\/|data:image\/)/i.test(p.image) ? p.image : "";
+    const iconMeta = typeof getProductIconMeta === "function"
+      ? getProductIconMeta(p.category, p.emoji)
+      : { tone: "tone-slate", svg: esc(p.emoji || "📦") };
+    const stockCls = stock <= 0 ? "out" : stock < 15 ? "low" : "";
     const stepper = (key, label, qty, kind) => `
       <div class="ch-quantity ${kind}-stepper ${qty > 0 ? "active" : ""}">
         <span class="ch-quantity-label">${label}</span>
@@ -96,11 +100,11 @@ function renderProducts(filter = document.getElementById("product-search")?.valu
     return `<article class="ch-product ${stock <= 0 ? "is-out" : ""} ${cajaQty || piezaQty ? "in-cart" : ""}" id="pcard-${esc(p.id)}">
           <div class="ch-product-meta">
           ${p.category ? `<span class="ch-category">${esc(p.category)}</span>` : ""}
-            <span class="ch-stock ${stock <= 0 ? "out" : ""}">${stock > 0 ? `${stock} disp.` : "Agotado"}</span>
+            <span class="ch-stock ${stockCls}">${stock > 0 ? `${stock} disp.` : "Agotado"}</span>
           </div>
       <div class="ch-product-head">
-        <div class="ch-image">
-          <span aria-hidden="true">${esc(p.emoji || "📦")}</span>
+        <div class="ch-image ${iconMeta.tone}${image ? " has-photo" : ""}">
+          <span class="cat-svg-icon" aria-hidden="true">${iconMeta.svg}</span>
           ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy" decoding="async">` : ""}
         </div>
         <div class="ch-product-info">
@@ -121,7 +125,11 @@ function renderProducts(filter = document.getElementById("product-search")?.valu
   }).join("");
   syncCatalogControls();
   grid.querySelectorAll(".ch-image img").forEach(img => {
-    img.addEventListener("error", () => img.remove(), { once: true });
+    img.addEventListener("error", () => {
+      const wrap = img.closest(".ch-image");
+      if (wrap) wrap.classList.remove("has-photo");
+      img.remove();
+    }, { once: true });
   });
 }
 

@@ -76,6 +76,11 @@ function updateCartUI() {
   if (hTotal) hTotal.textContent = `Carrito: $${totalAmt.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
   const hCounter = document.getElementById("header-cart-counter");
   if (hCounter) hCounter.textContent = totalItems;
+  const dBadge = document.getElementById("drawer-cart-badge");
+  if (dBadge) {
+    dBadge.textContent = prodCount;
+    dBadge.style.display = prodCount > 0 ? "inline-flex" : "none";
+  }
   const hBtn = document.getElementById("header-cart-btn");
   if (hBtn) {
     hBtn.style.display = document.body.classList.contains("role-vendedor") ? "inline-flex" : "none";
@@ -173,6 +178,9 @@ function renderCart() {
     subtotalBruto += price * units;
     const amount = price * units * (1 - pct / 100);
     const image = typeof p.image === "string" && /^(https?:\/\/|data:image\/)/i.test(p.image) ? p.image : "";
+    const iconMeta = typeof getProductIconMeta === "function"
+      ? getProductIconMeta(p.category, p.emoji)
+      : { tone: "tone-slate", svg: esc(p.emoji || "📦") };
     const control = (key, label, qty, step) => `<div class="order-quantity"><span>${label}</span><div class="order-stepper">
       <button type="button" data-order-key="${esc(key)}" data-delta="-1" aria-label="Quitar ${label.toLowerCase()} de ${esc(p.name)}" ${qty <= 0 ? "disabled" : ""}>−</button>
       <span>${qty}</span>
@@ -180,7 +188,7 @@ function renderCart() {
     </div></div>`;
     return `<article class="order-product">
       <div class="order-product-top">
-        <div class="order-photo"><span aria-hidden="true">${esc(p.emoji || "📦")}</span>${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy">` : ""}</div>
+        <div class="order-photo ${iconMeta.tone}${image ? " has-photo" : ""}"><span class="cat-svg-icon" aria-hidden="true">${iconMeta.svg}</span>${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" loading="lazy">` : ""}</div>
         <div class="order-product-info"><h3>${esc(p.name)}</h3>
           <p>${[p.unit ? esc(p.unit) : "", parseInt(p.piezas) > 0 ? `${pack} piezas/caja` : ""].filter(Boolean).join(" · ")}</p>
           <span class="order-unit-price">$${money(price)} por pieza</span>
@@ -210,7 +218,13 @@ function renderCart() {
     const input = event.target.closest?.("input[data-discount-product]");
     if (input && linesEl.contains(input)) setDescuento(input.dataset.discountProduct, input.value);
   };
-  linesEl.querySelectorAll(".order-photo img").forEach(img => img.addEventListener("error", () => img.remove(), {once:true}));
+  linesEl.querySelectorAll(".order-photo img").forEach(img => {
+    img.addEventListener("error", () => {
+      const wrap = img.closest(".order-photo");
+      if (wrap) wrap.classList.remove("has-photo");
+      img.remove();
+    }, {once:true});
+  });
   const countLabel = document.getElementById("order-product-count");
   if (countLabel) countLabel.textContent = `${ids.length} producto${ids.length === 1 ? "" : "s"}`;
   const clearButton = document.getElementById("btn-clear-cart");
@@ -345,6 +359,7 @@ function openQuickAddStore() {
       </button>
     </div>`;
   document.body.appendChild(overlay);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
 }
 
 async function submitQuickAddStore(btn) {
@@ -452,9 +467,10 @@ async function confirmOrder() {
     // posterior de entrega.
     status:"Entregado",
     // Datos del vendedor
-    vendedorId:    currentSession?.vendedorId    || null,
-    vendedorFolio: currentSession?.vendedorFolio || null,
-    vendedorNombre:currentSession?.vendedorNombre|| null,
+    vendedorId:     currentSession?.vendedorId     || null,
+    vendedorEmail:  currentSession?.vendedorEmail  || null,
+    vendedorFolio:  currentSession?.vendedorFolio  || null,
+    vendedorNombre: currentSession?.vendedorNombre || null,
     createdAt: { toDate: () => new Date() }
   };
 
@@ -516,18 +532,34 @@ async function confirmOrder() {
   }
 }
 
-function buildWhatsAppText(lines, total) {
-  const now = new Date().toLocaleString("es-MX");
+function formatOrderWhatsAppText(order) {
+  const dt = order?.createdAt?.toDate ? order.createdAt.toDate() : new Date();
+  const when = dt.toLocaleString("es-MX");
+  const storeName = order?.customerName || activeCustomerData?.storeName || "Tienda";
+  const ownerName = order?.ownerName || activeCustomerData?.ownerName || "";
+  const address = order?.address || activeCustomerData?.address || "Sin dirección";
+  const lines = order?.lines || [];
+  const total = Number(order?.total) || 0;
   let txt = `*DISTRIBUIDORA CHIBLI — PEDIDO CONFIRMADO*\n`;
-  txt    += `${now}\n`;
-  txt    += `${activeCustomerData.storeName} (${activeCustomerData.ownerName})\n`;
-  txt    += `${activeCustomerData.address || "Sin dirección"}\n\n`;
+  txt    += `${when}\n`;
+  txt    += `${storeName}${ownerName ? ` (${ownerName})` : ""}\n`;
+  txt    += `${address}\n\n`;
   txt    += `*Detalle del pedido:*\n`;
   lines.forEach(l => {
-    txt += `${l.emoji} ${l.name} × ${l.qty} = $${l.subtotal.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
+    txt += `${l.emoji || "•"} ${l.name} × ${l.qty} = $${(Number(l.subtotal) || 0).toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}\n`;
   });
   txt += `\n*TOTAL: $${total.toLocaleString("es-MX", {minimumFractionDigits: 2, maximumFractionDigits: 2})}*\n`;
   return txt;
+}
+
+function buildWhatsAppText(lines, total) {
+  return formatOrderWhatsAppText({
+    customerName: activeCustomerData?.storeName,
+    ownerName: activeCustomerData?.ownerName,
+    address: activeCustomerData?.address,
+    lines,
+    total
+  });
 }
 
 // ── Guarda el texto del último pedido para el botón del modal ──
@@ -538,16 +570,19 @@ function showOrderConfirmedModal(waText, phone) {
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay open";
   overlay.innerHTML = `
-    <div class="modal-sheet">
+    <div class="modal-sheet order-confirmed-sheet">
       <div class="modal-handle"></div>
-      <div class="modal-title">Pedido Confirmado</div>
-      <p style="font-size:.85rem;color:var(--gray-600);margin-bottom:1rem;">
+      <div class="order-confirmed-hero">
+        <div class="order-confirmed-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" width="22" height="22"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="modal-title" style="margin-bottom:.2rem;">Pedido Confirmado</div>
+      </div>
+      <p class="order-confirmed-desc">
         El pedido fue registrado correctamente en el sistema.<br/>
-        Toca el botón para enviarme el resumen por WhatsApp.
+        Toca el botón para enviar el resumen por WhatsApp.
       </p>
-      <pre style="background:var(--gray-50);border-radius:8px;padding:.75rem;font-size:.72rem;
-                  white-space:pre-wrap;word-break:break-word;margin-bottom:1rem;
-                  border:1px solid var(--gray-200);max-height:200px;overflow-y:auto;">${esc(waText)}</pre>
+      <pre class="order-confirmed-pre">${esc(waText)}</pre>
       <button class="btn btn-success" onclick="sendWhatsApp()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.132.558 4.13 1.535 5.865L.057 23.53a.5.5 0 00.611.611l5.666-1.478A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.815 9.815 0 01-5.003-1.367l-.359-.213-3.722.97.99-3.617-.234-.371A9.818 9.818 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
         Enviar por WhatsApp
@@ -560,12 +595,13 @@ function showOrderConfirmedModal(waText, phone) {
   overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
 }
 
-function sendWhatsApp() {
+function sendWhatsApp(customText) {
   // ─────────────────────────────────────────────────────────────
   // PON AQUÍ TU NÚMERO DE WHATSAPP (52 + 10 dígitos)
   const MI_NUMERO = "526181234567";
   // ─────────────────────────────────────────────────────────────
-  const url = `https://wa.me/${MI_NUMERO}?text=${encodeURIComponent(_lastWaText)}`;
+  const textToSend = typeof customText === "string" && customText ? customText : _lastWaText;
+  const url = `https://wa.me/${MI_NUMERO}?text=${encodeURIComponent(textToSend)}`;
   window.open(url, "_blank");
 }
 
@@ -586,4 +622,6 @@ window.openQuickAddStore = openQuickAddStore;
 window.submitQuickAddStore = submitQuickAddStore;
 window.clearCart = clearCart;
 window.confirmOrder = confirmOrder;
+window.formatOrderWhatsAppText = formatOrderWhatsAppText;
+window.buildWhatsAppText = buildWhatsAppText;
 window.sendWhatsApp = sendWhatsApp;

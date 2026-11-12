@@ -1,0 +1,1387 @@
+/* Estilos de los módulos agregados y diseño Negro Carbón + Rojo Chibli de barra lateral */
+
+/* Solo el administrador ve estos módulos */
+body.role-vendedor .admin-only-tab,
+body.role-vendedor #view-admin,
+body.role-vendedor #view-caja,
+body.role-vendedor .sidebar-section-label { display: none !important; }
+body.role-admin #view-admin .admin-subview { display: none; }
+body.role-admin #view-admin .admin-subview.active { display: block; }
+
+/* ── Logo Oficial DC en Login, Header, Drawer y Sidebar ── */
+.login-logo-icon.dc-logo-circle {
+  width: 78px !important;
+  height: 78px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
+}
+.login-logo-icon.dc-logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.header-logo.dc-logo-badge,
+.drawer-logo.dc-logo-badge {
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+.header-logo.dc-logo-badge img,
+.drawer-logo.dc-logo-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Ocultar etiquetas de sección en barra inferior móvil por defecto */
+.sidebar-section-label {
+  display: none;
+}
+
+/* ── Menú lateral móvil (Drawer) en Tema Negro Carbón + Rojo Chibli ── */
+body.role-admin #app-drawer {
+  background: linear-gradient(180deg, #11151E 0%, #0B0E14 100%) !important;
+  color: #F8FAFC !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin #app-drawer .drawer-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin #app-drawer .drawer-title {
+  color: #FFFFFF !important;
+}
+body.role-admin #app-drawer .drawer-subtitle {
+  color: #94A3B8 !important;
+}
+body.role-admin #app-drawer .drawer-close-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+body.role-admin #app-drawer .drawer-user-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin #app-drawer .drawer-user-name {
+  color: #F8FAFC !important;
+}
+body.role-admin #app-drawer .drawer-user-folio {
+  color: #94A3B8 !important;
+}
+
+#drawer-group-admin .sidebar-section-label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #64748B;
+  padding: 0.9rem 0.75rem 0.35rem;
+}
+
+#drawer-group-admin .drawer-nav-item {
+  border-radius: 12px;
+  margin-bottom: 0.22rem;
+  padding: 0.72rem 0.9rem;
+  color: #CBD5E1 !important;
+  font-weight: 700;
+}
+#drawer-group-admin .drawer-nav-item svg {
+  stroke: #94A3B8 !important;
+}
+#drawer-group-admin .drawer-nav-item:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #FFFFFF !important;
+}
+#drawer-group-admin .drawer-nav-item.active {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 8px 20px rgba(225, 29, 46, 0.36) !important;
+}
+#drawer-group-admin .drawer-nav-item.active svg {
+  stroke: #FFFFFF !important;
+}
+body.role-admin #app-drawer .drawer-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin #app-drawer .drawer-logout-btn {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #F87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.22) !important;
+}
+
+/* ── Barra Lateral PC (>= 1024px) Flotante y Redondeada en Negro Carbón + Rojo Chibli ── */
+@media (min-width: 1024px) {
+  body.role-admin #tab-bar {
+    top: 12px !important;
+    bottom: 12px !important;
+    left: 12px !important;
+    width: 242px !important;
+    border-radius: 22px !important;
+    background: linear-gradient(180deg, #131822 0%, #0B0E14 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 14px 34px rgba(11, 14, 20, 0.22) !important;
+  }
+
+  body.role-admin #app-header {
+    margin: 12px 1.8rem 0 270px !important;
+    border-radius: 16px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: blur(10px);
+    padding: 0.7rem 1.25rem !important;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03) !important;
+  }
+
+  body.role-admin .view {
+    margin-left: 254px !important;
+    padding: 1.25rem 1.8rem 2.2rem !important;
+  }
+
+  body.role-admin .sidebar-header {
+    padding: 1.4rem 1.15rem 0.9rem;
+    border-bottom: none;
+  }
+
+  body.role-admin .sidebar-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  body.role-admin .sidebar-brand-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(225, 29, 46, 0.28), 0 0 0 2px rgba(255, 255, 255, 0.12);
+  }
+
+  body.role-admin .sidebar-brand-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  body.role-admin .sidebar-header-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: #FFFFFF;
+    letter-spacing: -0.02em;
+  }
+
+  body.role-admin .sidebar-header-sub {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #94A3B8;
+    margin-top: 0.2rem;
+  }
+
+  body.role-admin #tab-bar .sidebar-section-label {
+    display: block;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #64748B;
+    padding: 1rem 1.2rem 0.38rem;
+  }
+
+  body.role-admin #tab-bar .tab-btn {
+    flex: 0 0 auto !important;
+    margin: 0.14rem 0.78rem;
+    padding: 0.72rem 0.95rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #CBD5E1;
+    gap: 0.78rem;
+    transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+  }
+
+  body.role-admin #tab-bar .tab-btn svg {
+    width: 19px;
+    height: 19px;
+    flex-shrink: 0;
+    stroke: #94A3B8;
+    transition: stroke 0.16s ease;
+  }
+
+  body.role-admin #tab-bar .tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.06);
+    color: #FFFFFF;
+  }
+
+  body.role-admin #tab-bar .tab-btn:hover:not(.active) svg {
+    stroke: #FFFFFF;
+  }
+
+  body.role-admin #tab-bar .tab-btn.active {
+    background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 8px 20px rgba(225, 29, 46, 0.38) !important;
+  }
+
+  body.role-admin #tab-bar .tab-btn.active svg {
+    stroke: #FFFFFF !important;
+  }
+
+  body.role-admin .sidebar-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.85rem 0.78rem;
+  }
+
+  body.role-admin .sidebar-logout-btn {
+    color: #F87171;
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  body.role-admin .sidebar-logout-btn:hover {
+    background: rgba(239, 68, 68, 0.14);
+    color: #FCA5A5;
+  }
+}
+
+
+/* ── Tarjetas de Resumen del Período en Caja (Diseño Horizontal SaaS) ── */
+#view-caja .resumen-highlight-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.9rem !important;
+  margin-top: 0.35rem !important;
+}
+
+@media (min-width: 900px) {
+  #view-caja .resumen-highlight-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.05rem !important;
+  }
+}
+
+#view-caja .resumen-highlight-card {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 0.95rem !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 16px !important;
+  padding: 1.15rem 1.2rem !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03) !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+#view-caja .resumen-highlight-card:hover {
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+#view-caja .resumen-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+#view-caja .resumen-icon-box svg {
+  width: 21px;
+  height: 21px;
+}
+
+#view-caja .resumen-icon-box.green {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+#view-caja .resumen-icon-box.red {
+  background: #FEF2F2;
+  color: #DC2626;
+}
+
+#view-caja .resumen-icon-box.purple {
+  background: #F3E8FF;
+  color: #6D28D9;
+}
+
+#view-caja .resumen-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+#view-caja .resumen-highlight-label {
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  text-transform: none !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 0.25rem !important;
+}
+
+#view-caja .resumen-highlight-headline {
+  font-size: 1.32rem !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  margin-bottom: 0.35rem !important;
+  white-space: nowrap;
+}
+
+#view-caja .resumen-unit {
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  color: #334155 !important;
+}
+
+#view-caja .resumen-progress-track {
+  width: 100%;
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.45rem 0 0.45rem;
+}
+
+#view-caja .resumen-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+#view-caja .resumen-highlight-desc {
+  font-size: 0.74rem !important;
+  color: #64748B !important;
+  line-height: 1.35 !important;
+}
+
+
+/* ── Barra Superior (#app-header) Limpia y Sin Logo Duplicado ── */
+#app-header {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03) !important;
+}
+
+#app-header .header-logo {
+  display: none !important;
+}
+
+#app-header .header-sub {
+  color: #64748B !important;
+}
+
+#app-header .header-title {
+  color: #0F172A !important;
+}
+
+#app-header .header-hamburger-btn {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 10px !important;
+}
+
+#app-header .header-hamburger-btn svg {
+  stroke: #0F172A !important;
+}
+
+body.role-admin #app-drawer {
+  border-radius: 0 24px 24px 0 !important;
+}
+
+
+/* ── Tarjeta Desplegable de Registrar Gasto en Negro Carbón ── */
+.caja-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.dash-gasto-btn.carbon {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 0.55rem 1.05rem !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.45rem !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 46, 0.34) !important;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important;
+}
+
+.dash-gasto-btn.carbon:hover {
+  background: linear-gradient(135deg, #EF2335 0%, #991B1B 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(225, 29, 46, 0.42) !important;
+}
+
+.gasto-carbon-card {
+  margin: 0.4rem 0 1.25rem !important;
+  animation: gastoSlideDown 0.2s ease-out;
+}
+
+@keyframes gastoSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mgmt-hero-banner.carbon-banner {
+  background: linear-gradient(135deg, #1A202C 0%, #11151E 60%, #0B0E14 100%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mgmt-hero-banner.carbon-banner .mgmt-hero-icon-circle {
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%) !important;
+  box-shadow: 0 4px 14px rgba(225, 29, 46, 0.38) !important;
+}
+
+.gasto-close-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.gasto-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.mgmt-input-wrap select {
+  width: 100% !important;
+  height: 48px !important;
+  border: 1.5px solid #E2E8F0 !important;
+  border-radius: 12px !important;
+  padding: 0 2rem 0 2.95rem !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  color: #0F172A !important;
+  background-color: #FFFFFF !important;
+  font-family: inherit !important;
+  outline: none !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.mgmt-input-wrap select:focus {
+  border-color: #11151E !important;
+  box-shadow: 0 0 0 3px rgba(17, 21, 30, 0.12) !important;
+}
+
+.mgmt-submit-pill-btn.carbon-pill-btn {
+  background: linear-gradient(135deg, #1E2433 0%, #11151E 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22) !important;
+}
+
+.mgmt-submit-pill-btn.carbon-pill-btn:hover {
+  background: linear-gradient(135deg, #283044 0%, #161B26 100%) !important;
+}
+
+
+/* ── Rediseño Integral del Módulo de Caja (4 KPIs Horizontales + 2 Columnas Abajo) ── */
+#view-caja .resumen-icon-box.blue {
+  background: #EFF6FF;
+  color: #1D4ED8;
+}
+
+#view-caja .resumen-highlight-grid.caja-kpi-row {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 0.9rem !important;
+  margin-bottom: 1.2rem !important;
+}
+
+@media (min-width: 640px) {
+  #view-caja .resumen-highlight-grid.caja-kpi-row {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (min-width: 1180px) {
+  #view-caja .resumen-highlight-grid.caja-kpi-row {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
+.caja-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.15rem;
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .caja-bottom-grid {
+    grid-template-columns: 380px 1fr;
+  }
+}
+
+.caja-panel-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 18px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03);
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.caja-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+.caja-panel-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 0.15rem;
+  letter-spacing: -0.01em;
+}
+
+.caja-panel-sub {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin: 0;
+  font-weight: 500;
+}
+
+.caja-panel-badge {
+  background: #F1F5F9;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Lista de categorías (Columna Izquierda) */
+.caja-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.caja-cat-row {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 13px;
+  padding: 0.85rem 1rem;
+}
+
+.caja-cat-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.caja-cat-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.caja-cat-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.caja-cat-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caja-cat-pct-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+}
+
+.caja-cat-amt {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0F172A;
+  flex-shrink: 0;
+}
+
+.caja-cat-bar-track {
+  width: 100%;
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.caja-cat-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Bitácora de Gastos Registrados (Columna Derecha) */
+.caja-tx-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.caja-tx-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.caja-tx-row:hover {
+  background: #FFFFFF;
+  border-color: #CBD5E1;
+}
+
+.caja-tx-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.caja-tx-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.caja-tx-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin-bottom: 0.22rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caja-tx-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  font-size: 0.74rem;
+  color: #64748B;
+}
+
+.caja-tx-cat-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.14rem 0.5rem;
+  border-radius: 6px;
+}
+
+.caja-tx-right {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-shrink: 0;
+}
+
+.caja-tx-amount {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #DC2626;
+  letter-spacing: -0.01em;
+}
+
+.caja-tx-del-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.caja-tx-del-btn:hover {
+  background: #FEE2E2;
+  transform: scale(1.04);
+}
+
+/* Estado vacío elegante */
+.caja-empty-box {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748B;
+}
+
+.caja-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #F1F5F9;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.65rem;
+}
+
+.caja-empty-title {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 0.2rem;
+}
+
+.caja-empty-sub {
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+
+/* ── Tarjetas KPI de Caja idénticas a las de Inventario (#inventario-kpis) ── */
+#caja-kpis {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.8rem !important;
+  margin-bottom: 1.05rem !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  #caja-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+#caja-kpis .dash-kpi-card {
+  min-width: 0;
+  padding: 1.05rem 1.25rem !important;
+  border-radius: 15px !important;
+  border: 1.5px solid #E5E7EB !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #FFFFFF !important;
+}
+
+#caja-kpis .dash-kpi-top {
+  display: flex;
+  align-items: center !important;
+  justify-content: space-between;
+  gap: 0.4rem !important;
+  margin-bottom: 0.35rem !important;
+}
+
+#caja-kpis .dash-kpi-label {
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: #64748B !important;
+  line-height: 1.3 !important;
+  min-width: 0;
+}
+
+#caja-kpis .dash-kpi-icon-box {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  flex-shrink: 0;
+}
+
+#caja-kpis .dash-kpi-icon-box svg {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+#caja-kpis .dash-kpi-value {
+  font-size: 1.72rem !important;
+  font-weight: 900 !important;
+  color: #0F172A !important;
+  line-height: 1.1 !important;
+  margin: 0.1rem 0 0.35rem !important;
+  letter-spacing: -0.02em !important;
+  white-space: nowrap !important;
+}
+
+#caja-kpis .dash-kpi-badge {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  padding: 0.2rem 0.6rem !important;
+  border-radius: 999px !important;
+  margin-top: 0.15rem !important;
+  display: inline-block;
+  max-width: 100%;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   BOTÓN DE CAMBIO DE TEMA (MODO OSCURO / CLARO) EN HEADER ADMIN
+   ══════════════════════════════════════════════════════════════════ */
+.header-theme-btn {
+  display: none;
+  align-items: center;
+  gap: 0.42rem;
+  height: 36px;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #334155;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+}
+
+body.role-admin .header-theme-btn {
+  display: inline-flex;
+}
+
+.header-theme-btn:hover {
+  background: #F1F5F9;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+/* En modo claro mostramos el icono de Luna ("Oscuro"), en modo oscuro el de Sol ("Claro") */
+.header-theme-btn .theme-icon-sun {
+  display: none;
+  color: #FBBF24;
+}
+.header-theme-btn .theme-icon-moon {
+  display: block;
+  color: #475569;
+}
+
+@media (max-width: 639px) {
+  .header-theme-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  .header-theme-btn .theme-btn-label {
+    display: none;
+  }
+}
+
+body.role-admin.theme-dark .header-theme-btn {
+  background: #1A2232 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+body.role-admin.theme-dark .header-theme-btn:hover {
+  background: #243046 !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+body.role-admin.theme-dark .header-theme-btn .theme-icon-sun {
+  display: block;
+}
+body.role-admin.theme-dark .header-theme-btn .theme-icon-moon {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TEMA OSCURO OBSIDIANA (QUITANDO EL FONDO BLANCO, MANTENIENDO
+   INTACTA LA BARRA LATERAL FLOTANTE Y EL DISEÑO DE LOS MÓDULOS)
+   ══════════════════════════════════════════════════════════════════ */
+body.role-admin.theme-dark {
+  background: #0B0F17 !important;
+  color: #F1F5F9 !important;
+}
+
+/* Barra superior flotante en tono oscuro haciendo juego con la barra lateral flotante */
+body.role-admin.theme-dark #app-header {
+  background: #131924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #F8FAFC !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.role-admin.theme-dark #app-header .header-sub {
+  color: #94A3B8 !important;
+}
+
+body.role-admin.theme-dark #app-header .header-title {
+  color: #FFFFFF !important;
+}
+
+body.role-admin.theme-dark #app-header .header-hamburger-btn {
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #FFFFFF !important;
+}
+
+body.role-admin.theme-dark #app-header .header-hamburger-btn svg {
+  stroke: #FFFFFF !important;
+}
+
+/* Barra lateral flotante: resalta sobre el fondo obsidiana con borde sutil */
+@media (min-width: 1024px) {
+  body.role-admin.theme-dark #tab-bar {
+    background: linear-gradient(180deg, #151C28 0%, #0F141D 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45) !important;
+  }
+}
+
+/* Tarjetas principales, KPIs, paneles de Caja, Dashboard, Inventario, Tiendas, Tickets y Pedidos */
+body.role-admin.theme-dark .card,
+body.role-admin.theme-dark .dash-kpi-card,
+body.role-admin.theme-dark #caja-kpis .dash-kpi-card,
+body.role-admin.theme-dark #inventario-kpis .dash-kpi-card,
+body.role-admin.theme-dark .dash-utilidad-card,
+body.role-admin.theme-dark .dash-pedidos-card,
+body.role-admin.theme-dark .dash-critical-item,
+body.role-admin.theme-dark .caja-panel-card,
+body.role-admin.theme-dark .stock-card-pro,
+body.role-admin.theme-dark .mgmt-reg-card,
+body.role-admin.theme-dark .mgmt-item-card,
+body.role-admin.theme-dark .ticket-order-card,
+body.role-admin.theme-dark .tix-order-card,
+body.role-admin.theme-dark .rend-kpi-mini,
+body.role-admin.theme-dark .rend-vend-card,
+body.role-admin.theme-dark .np-step-card {
+  background: #131924 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #F1F5F9 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Primera tarjeta de dinero con degradado sutil estilo imagen 3 */
+body.role-admin.theme-dark #admin-subview-dashboard .dash-kpi-grid .dash-kpi-card:first-child,
+body.role-admin.theme-dark #caja-kpis .dash-kpi-card:first-child,
+body.role-admin.theme-dark .dash-utilidad-card,
+body.role-admin.theme-dark .rend-kpi-mini:first-child {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14) 0%, #131924 75%) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
+}
+
+/* Textos y títulos dentro de Admin */
+body.role-admin.theme-dark .dash-panel-title,
+body.role-admin.theme-dark .inv-hero-title,
+body.role-admin.theme-dark .dash-kpi-value,
+body.role-admin.theme-dark #caja-kpis .dash-kpi-value,
+body.role-admin.theme-dark #inventario-kpis .dash-kpi-value,
+body.role-admin.theme-dark .dash-utilidad-value,
+body.role-admin.theme-dark .dash-pedidos-title,
+body.role-admin.theme-dark .dash-pedidos-count,
+body.role-admin.theme-dark .dash-stock-title,
+body.role-admin.theme-dark .dash-ops-title,
+body.role-admin.theme-dark .dash-critical-name,
+body.role-admin.theme-dark .caja-panel-title,
+body.role-admin.theme-dark .caja-cat-name,
+body.role-admin.theme-dark .caja-cat-amt,
+body.role-admin.theme-dark .caja-tx-title,
+body.role-admin.theme-dark .sc-title,
+body.role-admin.theme-dark .sc-prod-name,
+body.role-admin.theme-dark .sc-stock-num,
+body.role-admin.theme-dark .sc-price-col-val,
+body.role-admin.theme-dark .mgmt-list-title,
+body.role-admin.theme-dark .mgmt-item-title,
+body.role-admin.theme-dark .mgmt-item-name,
+body.role-admin.theme-dark .card-title,
+body.role-admin.theme-dark .rend-kpi-mini-val,
+body.role-admin.theme-dark .rend-vend-name,
+body.role-admin.theme-dark .rend-vend-stat-val,
+body.role-admin.theme-dark .rank-row-name,
+body.role-admin.theme-dark .rank-row-amt,
+body.role-admin.theme-dark .resumen-val,
+body.role-admin.theme-dark .tix-order-folio,
+body.role-admin.theme-dark .tix-order-amt,
+body.role-admin.theme-dark .np-step-title {
+  color: #F8FAFC !important;
+}
+
+body.role-admin.theme-dark .dash-panel-sub,
+body.role-admin.theme-dark .inv-hero-sub,
+body.role-admin.theme-dark .dash-kpi-label,
+body.role-admin.theme-dark #caja-kpis .dash-kpi-label,
+body.role-admin.theme-dark #inventario-kpis .dash-kpi-label,
+body.role-admin.theme-dark .dash-utilidad-label,
+body.role-admin.theme-dark .dash-date-label,
+body.role-admin.theme-dark .caja-panel-sub,
+body.role-admin.theme-dark .caja-tx-meta,
+body.role-admin.theme-dark .sc-subtitle,
+body.role-admin.theme-dark .sc-prod-meta,
+body.role-admin.theme-dark .sc-stock-label,
+body.role-admin.theme-dark .sc-price-col-lbl,
+body.role-admin.theme-dark .sc-price-col-label,
+body.role-admin.theme-dark .mgmt-list-sub,
+body.role-admin.theme-dark .mgmt-item-sub,
+body.role-admin.theme-dark .mgmt-item-meta,
+body.role-admin.theme-dark .mgmt-field-label,
+body.role-admin.theme-dark .rend-kpi-mini-label,
+body.role-admin.theme-dark .rend-vend-folio,
+body.role-admin.theme-dark .rend-vend-stat-label,
+body.role-admin.theme-dark .rend-vend-total-sub,
+body.role-admin.theme-dark .rank-row-meta,
+body.role-admin.theme-dark .rank-row-sub,
+body.role-admin.theme-dark .resumen-label,
+body.role-admin.theme-dark .tix-order-meta,
+body.role-admin.theme-dark .np-step-sub {
+  color: #94A3B8 !important;
+}
+
+/* Sub-cajas internas (filas de gastos, precios de inventario, rankings, tickets, botones) */
+body.role-admin.theme-dark .caja-cat-row,
+body.role-admin.theme-dark .caja-tx-row,
+body.role-admin.theme-dark .sc-price-box,
+body.role-admin.theme-dark .stock-card-pro.is-low .sc-price-box,
+body.role-admin.theme-dark .mgmt-subnav-toggle,
+body.role-admin.theme-dark .caja-panel-badge,
+body.role-admin.theme-dark .caja-tab:not(.active),
+body.role-admin.theme-dark .inv-chip:not(.active),
+body.role-admin.theme-dark .rank-row,
+body.role-admin.theme-dark #rend-concentracion-row,
+body.role-admin.theme-dark .thermal-selector,
+body.role-admin.theme-dark .rend-vend-stats,
+body.role-admin.theme-dark .rend-vend-footer,
+body.role-admin.theme-dark .sc-stepper,
+body.role-admin.theme-dark .dash-pedir-btn,
+body.role-admin.theme-dark .dash-ticket-btn,
+body.role-admin.theme-dark .dash-order-print-btn,
+body.role-admin.theme-dark .rend-vend-toggle,
+body.role-admin.theme-dark #admin-subview-pedidos .btn-sm,
+body.role-admin.theme-dark .np-heavy-card,
+body.role-admin.theme-dark .np-margin-card {
+  background: #1A2232 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #E2E8F0 !important;
+}
+
+body.role-admin.theme-dark .mgmt-subnav-btn.active {
+  background: #253146 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.role-admin.theme-dark .mgmt-subnav-btn:not(.active) {
+  color: #94A3B8 !important;
+}
+
+body.role-admin.theme-dark .stock-alert-banner {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  color: #FDE68A !important;
+}
+
+body.role-admin.theme-dark .stock-alert-banner strong,
+body.role-admin.theme-dark .stock-alert-banner span {
+  color: #FEF3C7 !important;
+}
+
+body.role-admin.theme-dark .tix-order-top:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+body.role-admin.theme-dark .tix-order-detail,
+body.role-admin.theme-dark .ticket-body {
+  background: #0F1520 !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+  color: #E2E8F0 !important;
+}
+
+body.role-admin.theme-dark .sc-footer,
+body.role-admin.theme-dark .rend-vend-head,
+body.role-admin.theme-dark .rend-pedido-row {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+body.role-admin.theme-dark .sc-step-btn {
+  color: #CBD5E1 !important;
+}
+
+body.role-admin.theme-dark .sc-step-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #FFFFFF !important;
+}
+
+body.role-admin.theme-dark .caja-cat-bar-track,
+body.role-admin.theme-dark .dash-utilidad-bar-wrap,
+body.role-admin.theme-dark .sc-progress-track,
+body.role-admin.theme-dark .rend-vend-bar-wrap {
+  background: rgba(255, 255, 255, 0.09) !important;
+}
+
+/* Inputs, buscadores y selects en Admin */
+body.role-admin.theme-dark input,
+body.role-admin.theme-dark select,
+body.role-admin.theme-dark textarea,
+body.role-admin.theme-dark .mgmt-input-wrap input,
+body.role-admin.theme-dark .mgmt-input-wrap select {
+  background-color: #1A2232 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #F8FAFC !important;
+}
+
+body.role-admin.theme-dark input::placeholder,
+body.role-admin.theme-dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+/* Tabla de pedidos recientes en Dashboard */
+body.role-admin.theme-dark .dash-ops-section > div {
+  background: #131924 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.role-admin.theme-dark .dash-orders-table th {
+  background: #1A2232 !important;
+  color: #94A3B8 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.role-admin.theme-dark .dash-orders-table td {
+  color: #E2E8F0 !important;
+  border-bottom-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Chips e insignias en modo oscuro */
+body.role-admin.theme-dark .dash-kpi-icon-box.green { background: rgba(16, 185, 129, 0.16) !important; color: #34D399 !important; }
+body.role-admin.theme-dark .dash-kpi-icon-box.red   { background: rgba(239, 68, 68, 0.16) !important; color: #F87171 !important; }
+body.role-admin.theme-dark .dash-kpi-icon-box.amber { background: rgba(245, 158, 11, 0.16) !important; color: #FBBF24 !important; }
+body.role-admin.theme-dark .dash-kpi-icon-box.purple{ background: rgba(139, 92, 246, 0.16) !important; color: #A78BFA !important; }
+body.role-admin.theme-dark .dash-kpi-icon-box.blue  { background: rgba(59, 130, 246, 0.16) !important; color: #60A5FA !important; }
+
+body.role-admin.theme-dark .dash-kpi-badge.up {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+}
+body.role-admin.theme-dark .dash-kpi-badge.gray {
+  background: rgba(148, 163, 184, 0.14) !important;
+  color: #CBD5E1 !important;
+}
+
+/* Pulido integral de Dark Mode en modales, menú avatar, botones eliminar y sub-vistas */
+body.role-admin.theme-dark #header-menu,
+body.role-admin.theme-dark .confirm-box,
+body.role-admin.theme-dark .modal-sheet {
+  background: #131924 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #F1F5F9 !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5) !important;
+}
+body.role-admin.theme-dark .header-menu-label,
+body.role-admin.theme-dark .confirm-title,
+body.role-admin.theme-dark .modal-title {
+  color: #F8FAFC !important;
+}
+body.role-admin.theme-dark .header-menu-sub,
+body.role-admin.theme-dark .confirm-msg {
+  color: #94A3B8 !important;
+}
+body.role-admin.theme-dark .header-menu-btn {
+  color: #F87171 !important;
+}
+body.role-admin.theme-dark .header-menu-btn:hover {
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+body.role-admin.theme-dark .confirm-actions .btn-secondary {
+  background: #1A2232 !important;
+  color: #E2E8F0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Separadores, botones de eliminar y detalles de Inventario / Caja / Tiendas */
+body.role-admin.theme-dark .caja-panel-header,
+body.role-admin.theme-dark .mgmt-form-footer {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin.theme-dark .mgmt-del-pill-btn,
+body.role-admin.theme-dark .caja-tx-del-btn,
+body.role-admin.theme-dark .sc-del-btn {
+  background: rgba(239, 68, 68, 0.14) !important;
+  color: #F87171 !important;
+  border-color: rgba(239, 68, 68, 0.28) !important;
+}
+body.role-admin.theme-dark .mgmt-del-pill-btn:hover,
+body.role-admin.theme-dark .caja-tx-del-btn:hover,
+body.role-admin.theme-dark .sc-del-btn:hover {
+  background: rgba(239, 68, 68, 0.24) !important;
+  color: #FCA5A5 !important;
+}
+body.role-admin.theme-dark .mgmt-submit-pill-btn.carbon-pill-btn {
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+body.role-admin.theme-dark .inv-chip:not(.active) .inv-chip-n {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #CBD5E1 !important;
+}
+body.role-admin.theme-dark .inv-count {
+  color: #94A3B8 !important;
+  border-top-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin.theme-dark .inv-count b {
+  color: #F8FAFC !important;
+}
+body.role-admin.theme-dark .sc-divider-v {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+body.role-admin.theme-dark .sc-stepper input[type="number"] {
+  background: transparent !important;
+  color: #F8FAFC !important;
+}
+
+/* Sub-vista "+ Agregar producto" en Modo Oscuro */
+body.role-admin.theme-dark .np-topbar {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.role-admin.theme-dark .np-main-title,
+body.role-admin.theme-dark .np-bc-cur,
+body.role-admin.theme-dark .np-symbol-title,
+body.role-admin.theme-dark .np-heavy-title {
+  color: #F8FAFC !important;
+}
+body.role-admin.theme-dark .np-main-sub,
+body.role-admin.theme-dark .np-bc-link,
+body.role-admin.theme-dark .np-field-label,
+body.role-admin.theme-dark .np-symbol-sub,
+body.role-admin.theme-dark .np-heavy-desc,
+body.role-admin.theme-dark .np-preview-title,
+body.role-admin.theme-dark .np-preview-hint {
+  color: #94A3B8 !important;
+}
+body.role-admin.theme-dark .np-symbol-box {
+  background: #1A2232 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.role-admin.theme-dark .np-emoji-pick:not(.active) {
+  background: #1A2232 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+body.role-admin.theme-dark .np-emoji-pick.active {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: #10B981 !important;
+}
+body.role-admin.theme-dark .np-margin-label,
+body.role-admin.theme-dark .np-margin-sub,
+body.role-admin.theme-dark .np-margin-net,
+body.role-admin.theme-dark .np-margin-pct {
+  color: #34D399 !important;
+}
+body.role-admin.theme-dark .np-margin-badge {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #6EE7B7 !important;
+}
+body.role-admin.theme-dark .np-btn-cancel {
+  background: #1A2232 !important;
+  color: #E2E8F0 !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+body.role-admin.theme-dark .np-health-box {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.28) !important;
+}
+body.role-admin.theme-dark .np-health-title {
+  color: #93C5FD !important;
+}
+body.role-admin.theme-dark .np-health-desc {
+  color: #BFDBFE !important;
+}
+
+/* Dashboard y Tickets detalles oscuros */
+body.role-admin.theme-dark .dash-orders-table .order-folio {
+  color: #F87171 !important;
+}
+body.role-admin.theme-dark .dash-orders-table .order-hora {
+  color: #94A3B8 !important;
+}
+body.role-admin.theme-dark .badge-done {
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34D399 !important;
+}
+body.role-admin.theme-dark #pendientes-summary-card {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+body.role-admin.theme-dark #pendientes-summary-card .card-title {
+  color: #FBBF24 !important;
+}
+body.role-admin.theme-dark #pendientes-summary-list span {
+  color: #FDE68A !important;
+}
+body.role-admin.theme-dark #pendientes-summary-card .btn-secondary {
+  background: #1A2232 !important;
+  color: #F8FAFC !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}

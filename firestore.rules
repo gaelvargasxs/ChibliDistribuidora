@@ -1,67 +1,103 @@
 rules_version = '2';
 
-/**
- * ===============================================================
- * DISTRIBUIDORA CHIBLI - REGLAS DE SEGURIDAD (ENTREGA 3)
- * ===============================================================
- * Módulos cubiertos en este avance según cronograma:
- * 1. Autenticación y Control de Roles (Login con Google OAuth + 2FA)
- * 2. Control de Inventarios y Existencias (products)
- * 3. Directorio de Tiendas y Rutas (customers)
- * 4. Directorio de Vendedores y Accesos (vendedores)
- * ===============================================================
- */
+// ===============================================================
+// Assumed Data Model — Distribuidora Chibli POS & Route
+// ===============================================================
+//
+// Collection: products/{productId}
+//   - name: string (nombre del producto)
+//   - price: number >= 0 (precio unitario de venta)
+//   - precioCosto: number >= 0 (opcional, costo unitario)
+//   - stock: number >= 0 (inventario disponible en piezas)
+//   - piezas: number (piezas por caja)
+//   - category, unit, emoji, image, barcode: string (metadatos del catálogo)
+//
+// Collection: customers/{customerId}
+//   - storeName: string (nombre de la tienda)
+//   - ownerName: string (nombre del dueño/encargado)
+//   - phone, zone, address: string (contacto y ubicación en ruta)
+//   - createdAt: timestamp (opcional)
+//
+// Collection: vendedores/{vendedorId}
+//   - folio: string (código de vendedor, ej. VEN-001)
+//   - nombre: string (nombre completo del vendedor)
+//   - email, telefono, zona, password, estado: string (datos de acceso y ruta)
+//
+// Collection: orders/{orderId}
+//   - customerId: string (ID de la tienda cliente)
+//   - customerName, ownerName, phone, address: string (datos de entrega)
+//   - lines: list (productos vendidos, cantidad > 0)
+//   - total: number >= 0 (importe total cobrado)
+//   - totalDescuento: number >= 0 (descuento aplicado)
+//   - status: string ('Entregado')
+//   - vendedorId, vendedorFolio, vendedorNombre: string | null
+//   - createdAt: timestamp
+//
+// Collection: gastos/{gastoId}
+//   - categoria: string (Gasolina, Compra de mercancía, Salarios, etc.)
+//   - monto: number > 0 (importe del egreso)
+//   - descripcion, responsable: string (opcional)
+//   - fecha: string (YYYY-MM-DD)
+//   - createdAt: timestamp (opcional)
+//
+// ===============================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── FUNCIONES DE VERIFICACIÓN DE ROL ──
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
 
-    // Verifica si el usuario ha iniciado sesión en Firebase
-    function isAuthenticated() {
-      return request.auth != null && request.auth.uid != null;
-    }
-
-    // Verifica si el usuario autenticado tiene el rol de Administrador
     function isAdmin() {
-      return isAuthenticated() && (
+      return request.auth != null && (
         request.auth.token.email == 'nel0407gael@gmail.com' ||
         request.auth.token.email == 'admin@chibli.com'
       );
     }
 
-    // ── 1. PRODUCTOS (INVENTARIO Y STOCK) ──
+    // 1. PRODUCTOS (Catálogo e Inventario)
     match /products/{productId} {
-      // Lectura permitida para consultar catálogo y existencias en tiempo real
       allow read: if true;
-
-      // Solo el Administrador puede registrar nuevos productos, cambiar precios o alterar stock
-      allow create, update, delete: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock']) &&
+        request.resource.data.stock is number &&
+        request.resource.data.stock >= 0 &&
+        request.resource.data.stock <= resource.data.stock
+      );
     }
 
-    // ── 2. TIENDAS (CLIENTES DE DISTRIBUCIÓN) ──
+    // 2. CLIENTES / TIENDAS (Ruta y Comercios)
     match /customers/{customerId} {
-      // Consulta del directorio de tiendas en ruta
       allow read: if true;
-
-      // Registro y actualización de tiendas de entrega
-      allow create, update: if isAuthenticated() || isAdmin();
-
-      // Solo el Administrador tiene permiso para dar de baja definitiva una tienda
+      allow create, update: if true;
       allow delete: if isAdmin();
     }
 
-    // ── 3. VENDEDORES (DIRECTORIO DE ACCESOS) ──
+    // 3. VENDEDORES (Acceso en Ruta y Gestión Admin)
     match /vendedores/{vendedorId} {
-      // Permite lectura para el selector del login de preventistas
       allow read: if true;
-
-      // Solo el Administrador puede registrar nuevos vendedores o eliminar sus accesos
       allow create, update, delete: if isAdmin();
     }
 
-    // ── 4. PRINCIPIO DE MENOR PRIVILEGIO (DEFAULT DENY) ──
-    // Cualquier otra colección no especificada tiene acceso bloqueado por defecto
+    // 4. PEDIDOS / VENTAS (Carrito, Historial, Dashboard, Caja, Tickets, Pedidos)
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if request.resource.data.customerId is string &&
+        request.resource.data.lines is list &&
+        request.resource.data.lines.size() > 0 &&
+        request.resource.data.total is number &&
+        request.resource.data.total >= 0;
+      allow update, delete: if isAdmin();
+    }
+
+    // 5. GASTOS (Módulo de Contabilidad / Caja)
+    match /gastos/{gastoId} {
+      allow read, write: if isAdmin();
+    }
+
+    // 6. DENEGACIÓN POR DEFECTO
     match /{document=**} {
       allow read, write: if false;
     }

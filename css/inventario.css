@@ -521,7 +521,7 @@
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  background: #059669;
+  background: linear-gradient(135deg, #E11D2E 0%, #B91C1C 100%);
   color: #FFFFFF;
   border: none;
   border-radius: 12px;
@@ -529,12 +529,13 @@
   font-size: .85rem;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-  transition: background .15s, transform .1s, box-shadow .15s;
+  box-shadow: 0 4px 14px rgba(225, 29, 46, 0.34);
+  transition: background .15s, transform .15s, box-shadow .15s;
 }
 .inv-add-trigger-btn:hover {
-  background: #047857;
-  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.32);
+  background: linear-gradient(135deg, #EF2335 0%, #991B1B 100%);
+  box-shadow: 0 6px 18px rgba(225, 29, 46, 0.42);
+  transform: translateY(-1px);
 }
 .inv-add-trigger-btn:active {
   transform: scale(0.98);

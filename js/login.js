@@ -158,7 +158,7 @@ async function doLogin() {
     if (e.code === "auth/wrong-password" || e.code === "auth/invalid-credential" || e.code === "auth/invalid-login-credentials") return "Contraseña incorrecta";
     if (e.code === "auth/user-not-found") return "El usuario " + email + " no existe en Firebase Auth";
     if (e.code === "auth/too-many-requests") return "Demasiados intentos, espera un momento";
-    if (e.code === "auth/operation-not-supported-in-this-environment") return "Abre la página con http://localhost (no con doble clic en el archivo)";
+    if (e.code === "auth/operation-not-supported-in-this-environment") return "Abre la página desde un servidor web (HTTPS o http://localhost), no con doble clic al archivo.";
     if (e.code === "auth/operation-not-allowed") return "Activa Email/Password en Firebase Authentication";
     if (e.code === "auth/unauthorized-domain") return "Dominio no autorizado en Firebase Authentication";
     return "Error de acceso (" + (e.code || e.message) + ")";
@@ -432,7 +432,7 @@ async function doGoogleLogin() {
     console.warn("Google Sign-In error:", e);
     if (e.code === "auth/popup-closed-by-user") return;
     if (e.code === "auth/operation-not-supported-in-this-environment" || window.location.protocol === "file:") {
-      errEl.textContent = "Google Sign-In requiere servidor web. Abre la página con: http://localhost:8000/evidencias/03_Tiendas_Vendedores/index.html (no con doble clic en el archivo directo).";
+      errEl.textContent = "Google Sign-In requiere servidor web (GitHub Pages HTTPS o http://localhost), no abrir el archivo local directo.";
     } else if (e.code === "auth/unauthorized-domain") {
       errEl.textContent = "Agrega tu dominio a 'Dominios autorizados' en Firebase Console > Authentication.";
     } else {

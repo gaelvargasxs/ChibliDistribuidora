@@ -20,8 +20,35 @@ function markTicketPrinted(orderId) {
   } catch(e) { /* localStorage no disponible, se ignora */ }
 }
 
-function renderTickets() {
+function syncThermalSizeSelect() {
+  const sel = document.getElementById("thermal-size");
+  if (!sel) return;
+  try {
+    const saved = localStorage.getItem("chibli_thermal_size");
+    if (saved && ["58", "80", "A4"].includes(saved)) sel.value = saved;
+  } catch (e) {}
+}
+
+function onThermalSizeChange(val) {
+  try { localStorage.setItem("chibli_thermal_size", val); } catch (e) {}
+}
+
+function getFilteredTickets(ignoreDateFilter = false) {
+  const dateFilter   = ignoreDateFilter ? "todos" : ((document.getElementById("ticket-filter-date")||{}).value || "hoy");
   const statusFilter = (document.getElementById("ticket-filter-status")||{}).value || "";
+  const storeFilter  = (document.getElementById("ticket-filter-store")||{}).value  || "";
+  const vendFilter   = (document.getElementById("ticket-filter-vendedor")||{}).value || "";
+  return orders.filter(o => {
+    if (dateFilter === "hoy" && !isOrderToday(o)) return false;
+    if (statusFilter && o.status !== statusFilter) return false;
+    if (storeFilter  && o.customerName !== storeFilter) return false;
+    if (vendFilter   && o.vendedorId !== vendFilter) return false;
+    return true;
+  });
+}
+
+function renderTickets() {
+  syncThermalSizeSelect();
   const storeSelect  = document.getElementById("ticket-filter-store");
   const vendSelect   = document.getElementById("ticket-filter-vendedor");
   if (!storeSelect || !vendSelect) return;
@@ -35,17 +62,12 @@ function renderTickets() {
   vendSelect.innerHTML = `<option value="">Todos los vendedores</option>` +
     vendedores.map(v => `<option value="${v.id}"${v.id===prevVend?" selected":""}>${esc(v.folio)} — ${esc(v.nombre)}</option>`).join("");
 
-  const storeFilter = storeSelect.value;
-  const vendFilter  = vendSelect.value;
-  const filtered = orders.filter(o => {
-    if (statusFilter && o.status !== statusFilter) return false;
-    if (storeFilter  && o.customerName !== storeFilter) return false;
-    if (vendFilter   && o.vendedorId !== vendFilter) return false;
-    return true;
-  });
+  const dateFilter = (document.getElementById("ticket-filter-date")||{}).value || "hoy";
+  const allMatchingNoDate = getFilteredTickets(true);
+  const filtered          = getFilteredTickets(false);
+  const todayFiltered     = allMatchingNoDate.filter(isOrderToday);
 
   // ── KPIs (siempre sobre lo de hoy, respetando los filtros de tienda/vendedor) ──
-  const todayFiltered = filtered.filter(isOrderToday);
   const totalHoy = todayFiltered.reduce((s,o) => s + (+o.total||0), 0);
   const printedToday = getPrintedTicketsToday();
   const impresosCount = todayFiltered.filter(o => printedToday.has(o.id)).length;
@@ -60,7 +82,10 @@ function renderTickets() {
   const el = document.getElementById("tickets-list");
   if (!el) return;
   if (!filtered.length) {
-    el.innerHTML = `<div class="empty-state"><p>Sin pedidos para este filtro.</p></div>`;
+    const hasOlder = dateFilter === "hoy" && allMatchingNoDate.length > 0;
+    el.innerHTML = hasOlder
+      ? `<div class="empty-state"><p>Sin pedidos de hoy para este filtro (${allMatchingNoDate.length} de fechas anteriores).</p><button class="btn btn-secondary btn-sm" style="margin-top:.5rem;width:auto;" onclick="const s=document.getElementById('ticket-filter-date');if(s){s.value='todos';renderTickets();}">Ver todas las fechas</button></div>`
+      : `<div class="empty-state"><p>Sin pedidos para este filtro.</p></div>`;
     return;
   }
   const sorted = [...filtered].sort((a,b) => {
@@ -193,13 +218,14 @@ function buildTicketPrint(o) {
 
   if (isThermal) {
     // ── Versión TÉRMICA ────────────────────────────────────────
+    const maxLen = size === "80" ? 26 : 18;
     let gananciaTotal = 0;
     const rows = (o.lines || []).map(l => {
       const prod = products.find(p => p.id === l.productId);
       const costo = prod?.precioCosto ? (+prod.precioCosto) : 0;
       const linGan = (l.price - costo) * (l.qty || 0);
       gananciaTotal += linGan;
-      const nombreCorto = (l.name || "").length > 16 ? l.name.slice(0,15)+"…" : l.name;
+      const nombreCorto = (l.name || "").length > maxLen ? l.name.slice(0, maxLen - 1) + "…" : l.name;
       return `<div class="th-row">
         <span class="name">${l.emoji||""}${esc(nombreCorto)}</span>
         <span class="qty">${l.qty}</span>
@@ -217,7 +243,7 @@ function buildTicketPrint(o) {
       ${o.address   ? `<div class="th-meta">${esc(o.address)}</div>` : ""}
       ${o.phone     ? `<div class="th-meta">Tel: ${esc(o.phone)}</div>` : ""}
       <hr class="th-divider"/>
-      <div class="th-row" style="font-weight:bold;border-bottom:1px solid #000;padding-bottom:2pt;margin-bottom:2pt;">
+      <div class="th-row th-cols">
         <span class="name">Producto</span><span class="qty">Cant</span><span class="sub">Total</span>
       </div>
       ${rows}
@@ -278,6 +304,31 @@ function buildTicketPrint(o) {
 }
 
 function buildPendientesPrint(summary) {
+  const size = getThermalSize();
+  const isThermal = size === "58" || size === "80";
+
+  if (isThermal) {
+    const fechaStr = new Date().toLocaleDateString("es-MX");
+    const rows = summary.map(t => `
+      <div class="th-row">
+        <span class="name">${t.emoji} ${esc(t.name)}${t.unit ? ` (${esc(t.unit)})` : ""}</span>
+        <span class="sub" style="width:auto;font-weight:bold;">${formatCajasSueltos(t.qty, t.piezas)}</span>
+      </div>`).join("");
+    return `
+    <div class="thermal-ticket">
+      <div class="th-header">
+        <div class="th-title">CARGA PESADA - HOY</div>
+        <div class="th-sub">DIST. CHIBLI · ${fechaStr}</div>
+      </div>
+      <div class="th-row th-cols">
+        <span class="name">Producto</span><span class="sub" style="width:auto;">Cant.</span>
+      </div>
+      ${rows}
+      <div class="th-footer">Resumen consolidado de carga</div>
+      <div class="th-cut">- - - - - - - - - -</div>
+    </div>`;
+  }
+
   const rows = summary.map(t => `
     <tr>
       <td style="padding:.4rem 0;font-size:1rem;">${t.emoji} ${esc(t.name)}${t.unit ? ` <span style="font-size:.78rem;color:#888;">(${esc(t.unit)})</span>` : ""}</td>
@@ -310,15 +361,7 @@ function printOneTicket(orderId) {
 }
 
 function printAllTickets() {
-  const statusFilter = (document.getElementById("ticket-filter-status")||{}).value || "";
-  const storeFilter  = (document.getElementById("ticket-filter-store")||{}).value  || "";
-  const vendFilter   = (document.getElementById("ticket-filter-vendedor")||{}).value || "";
-  const filtered = orders.filter(o => {
-    if (statusFilter && o.status !== statusFilter) return false;
-    if (storeFilter  && o.customerName !== storeFilter) return false;
-    if (vendFilter   && o.vendedorId !== vendFilter) return false;
-    return true;
-  });
+  const filtered = getFilteredTickets(false);
   if (!filtered.length) { toast("Sin tickets para imprimir"); return; }
   const todayFiltered = filtered.filter(isOrderToday);
   const summary = getPendientesSummary(todayFiltered);
@@ -329,43 +372,118 @@ function printAllTickets() {
 }
 
 function getThermalSize() {
-  return (document.getElementById("thermal-size") || {}).value || "58";
+  const el = document.getElementById("thermal-size");
+  if (el && el.value) return el.value;
+  try { return localStorage.getItem("chibli_thermal_size") || "58"; } catch (e) { return "58"; }
+}
+
+function getPrintCSS(size) {
+  const isThermal = size === "58" || size === "80";
+  if (!isThermal) {
+    return `
+      @page { size: A4 portrait; margin: 1.2cm; }
+      * { box-sizing: border-box; }
+      html, body {
+        color-scheme: light only;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+        font-family: Arial, sans-serif;
+        height: auto !important;
+        min-height: 0 !important;
+      }`;
+  }
+  // Ancho útil real de impresión: 48mm (384 dots) en rollo de 58mm, 72mm (576 dots) en 80mm.
+  // NO se fija alto en @page (ej. "58mm 80mm") ni break-after:page porque en drivers GDI térmicos
+  // como POS-58 (hoja continua 58x3276mm) Chrome centra las páginas pequeñas a mitad del rollo
+  // (~1.6m de papel en blanco) y dispara múltiples cortes/avances; con margin:0mm sin alto fijo,
+  // imprime desde y=0 en una sola tira continua y se detiene justo al final del último ticket.
+  const contentMm = size === "58" ? "48mm" : "72mm";
+  const pad = size === "58" ? "1mm 1.5mm 1.5mm 0.5mm" : "1.5mm 2mm 2mm 1mm";
+  const baseFont = size === "58" ? "8.2pt" : "9.5pt";
+  const rowFont  = size === "58" ? "7.6pt" : "8.6pt";
+  const subWidth = size === "58" ? "40pt" : "48pt";
+  return `
+    @page { margin: 0mm; }
+    * { box-sizing: border-box; }
+    html, body {
+      color-scheme: light only;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100%;
+      max-width: ${contentMm};
+      background: #fff !important;
+      color: #000 !important;
+      font-family: 'Courier New', Courier, monospace;
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible;
+    }
+    .thermal-ticket {
+      width: 100%;
+      max-width: ${contentMm};
+      margin: 0 0 6mm 0;
+      padding: ${pad};
+      font-size: ${baseFont};
+      line-height: 1.25;
+      color: #000;
+      background: #fff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .thermal-ticket:last-child {
+      margin-bottom: 0;
+    }
+    .thermal-ticket .th-header  { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 3pt; margin-bottom: 3pt; }
+    .thermal-ticket .th-title   { font-size: 10.5pt; font-weight: bold; letter-spacing: .02em; }
+    .thermal-ticket .th-sub     { font-size: 7pt; margin-top: 1pt; }
+    .thermal-ticket .th-store   { font-size: 9.2pt; font-weight: bold; margin: 2pt 0 1pt; }
+    .thermal-ticket .th-meta    { font-size: 7pt; line-height: 1.25; }
+    .thermal-ticket .th-divider { border: none; border-top: 1px dashed #000; margin: 3pt 0; }
+    .thermal-ticket .th-row     { display: flex; justify-content: space-between; align-items: baseline; font-size: ${rowFont}; margin: 1.5pt 0; gap: 2pt; }
+    .thermal-ticket .th-row.th-cols { font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 2pt; margin-bottom: 2pt; }
+    .thermal-ticket .th-row .name { flex: 1; min-width: 0; word-break: break-word; }
+    .thermal-ticket .th-row .qty  { width: 18pt; text-align: center; flex-shrink: 0; }
+    .thermal-ticket .th-row .sub  { width: ${subWidth}; text-align: right; flex-shrink: 0; white-space: nowrap; }
+    .thermal-ticket .th-total-row { display: flex; justify-content: space-between; font-size: 10.5pt; font-weight: bold; border-top: 1.5px solid #000; padding-top: 3pt; margin-top: 3pt; }
+    .thermal-ticket .th-ganancia  { display: flex; justify-content: space-between; font-size: 7pt; margin-top: 2pt; color: #333; }
+    .thermal-ticket .th-footer  { text-align: center; font-size: 7pt; margin-top: 5pt; border-top: 1px dashed #000; padding-top: 3pt; line-height: 1.3; }
+    .thermal-ticket .th-cut     { text-align: center; font-size: 7pt; margin-top: 4pt; letter-spacing: .15em; }`;
 }
 
 function doPrint(inner) {
   const size = getThermalSize();
   const isThermal = size === "58" || size === "80";
-  let pageStyle = "";
-  if (isThermal) {
-    const mm = size === "58" ? "58mm" : "80mm";
-    pageStyle = `@page{size:${mm} auto;margin:0mm}
-    body{font-family:'Courier New',Courier,monospace;background:#fff;width:${mm};}`;
-  } else {
-    pageStyle = `@page{size:A4;margin:1.5cm}
-    body{font-family:Arial,sans-serif;background:#fff;}`;
-  }
+  const contentMm = size === "58" ? "48mm" : "72mm";
+  const baseCSS = getPrintCSS(size);
 
   // Reusar o crear iframe oculto
   let frame = document.getElementById("print-iframe");
   if (!frame) {
     frame = document.createElement("iframe");
     frame.id = "print-iframe";
-    frame.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;";
     document.body.appendChild(frame);
   }
+  frame.style.cssText = isThermal
+    ? `position:fixed;top:-9999px;left:-9999px;width:${contentMm};height:1px;border:none;`
+    : `position:fixed;top:-9999px;left:-9999px;width:210mm;height:1px;border:none;`;
 
   const doc = frame.contentDocument || frame.contentWindow.document;
   doc.open();
   doc.write(`<!DOCTYPE html>
-    <html><head><meta charset="UTF-8">
-    ${pageStyle}
-    </head><body>${inner}</body></html>`);
+    <html><head><meta charset="UTF-8"><style>${baseCSS}</style></head><body>${inner}</body></html>`);
   doc.close();
 
-  setTimeout(() => {
-    frame.contentWindow.focus();
-    frame.contentWindow.print();
-  }, 350);
+  clearTimeout(window._chibliPrintTimer);
+  window._chibliPrintTimer = setTimeout(() => {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    } catch (e) {
+      console.warn("Error al imprimir ticket:", e);
+    }
+  }, 220);
 }
 
 async function setOrderStatus(orderId, status) {
